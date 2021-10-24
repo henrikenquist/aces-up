@@ -101,11 +101,11 @@ class Game:
 
         slots = self.empty_piles()
         
-        card_str = str(from_pile.last_card())
+        card_str = from_pile.last_card()
         from_pile_idx = from_pile.index
         to_pile_idx = slots[0]
 
-        self.moves.append([card_str, from_pile_idx, to_pile_idx, rule_str, len(self.moves) + 1])
+        self.moves.append([from_pile.last_card(), from_pile_idx, to_pile_idx, rule_str, len(self.moves) + 1])
         self.piles[to_pile_idx].add_card(from_pile.pop_card())
 
         if self.print_out:

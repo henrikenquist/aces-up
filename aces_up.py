@@ -1,4 +1,4 @@
-import game, strategy, cards
+import game, strategy, cards, solution
 import time
 from itertools import permutations
 import collections, functools, operator
@@ -6,21 +6,24 @@ import pprint
 
 # _______________________________________________________________________________________________________
 #
-#  Settings                                 
+#  Settings (see strategy.py for more information)                      
 # _______________________________________________________________________________________________________
 
-# NOTE: See strategy.py for more information
-
-number_of_decks = 1
+number_of_decks = 500
 # rule_list       = [1,2,3,4,5, 10,20, 100,200,300,400, 1000]
 # rule_list       = [1,2,3,4, 10,20, 100,200,300,400, 1000]
-rule_list       = [1,2,3,4, 10,20, 100,200, 1000]
+# rule_list       = [1,2,3,4, 10,20, 100,200, 1000] # ~ 400 000 games
+rule_list       = [1,2, 1000]
+
+# db_name         = 'solutions.sqlite'
+db_name         = 'test_01.sqlite'
 
 USE_SUB_SETS        = True
 PERMUTE             = True
 STRATEGY_PRINT_OUT  = False
 GAME_PRINT_OUT      = False
 
+# TODO
 # RECURSIVE       = False
 # deck_from_db    = []
 # _______________________________________________________________________________________________________
@@ -29,7 +32,6 @@ GAME_PRINT_OUT      = False
 game_counts     = 0
 # Statistics
 results         = []  # stats for each game won
-
 highest_score   = 0
 best_strategy   = []
 winning_rules   = []  # used for printing total stats after main loop finishes
@@ -45,6 +47,8 @@ start_time      = time.time()
 #
 #  Main loop                                 
 # _______________________________________________________________________________________________________
+
+solution.create_db(db_name) # run once to create solutions database
 
 print('\nStarting...\n')
 
@@ -69,10 +73,12 @@ for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategi
         # should losing decks be stored for future reference?
         # should stats för each game be stored (or a summary like the print out?)
         if curr_game.has_won():
+            # terminal printout
             deck_counts[deck_nr] = deck_counts.get(deck_nr,0) + 1
-            winning_rules.append(curr_game.get_rule_counts()) # NOTE: only used for printing out stats at the end
-            results.append(([deck, curr_strategy, USE_SUB_SETS, PERMUTE,
-                             curr_game.get_rule_counts(), curr_game.get_moves()])) # this is what we want !!!
+            winning_rules.append(curr_game.get_rule_counts())
+            results.append(([deck, curr_strategy, curr_game.get_rule_counts(), curr_game.get_moves()]))
+            # database
+            solution.save_in_db(db_name, deck, curr_strategy, curr_game.get_moves())
 
         # For print out of losing games
         if curr_game.get_score() > highest_score:
@@ -87,6 +93,14 @@ for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategi
 
 # All loops are finished
 toc= time.perf_counter()
+
+
+# _______________________________________________________________________________________________________
+#
+#  Database                                 
+# _______________________________________________________________________________________________________
+
+
 
 
 # _______________________________________________________________________________________________________

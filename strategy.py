@@ -43,7 +43,25 @@ def get_strategies(rule_list, USE_SUB_SETS, PERMUTE):
 
     return strategies
 
+def get_rule_str(rule_nr):
 
+    if rule_nr == 1:      rule_str = 'move_ace_from_highest_rank_sum'
+    if rule_nr == 2:      rule_str = 'move_ace_suit_below'
+    if rule_nr == 3:      rule_str = 'move_ace_from_smallest'
+    if rule_nr == 4:      rule_str = 'move_ace_from_largest'
+    if rule_nr == 5:      rule_str = 'move_first_ace'
+
+    if rule_nr == 10:     rule_str = 'move_from_smallest_has_higher_in_suit_below'
+    if rule_nr == 20:     rule_str = 'move_from_largest_has_higher_in_suit_below'
+    
+    if rule_nr == 100:    rule_str = 'move_highest_has_higher_in_suit_below'
+    if rule_nr == 200:    rule_str = 'move_highest_card'
+    if rule_nr == 300:    rule_str = 'move_highest_from_smallest'
+    if rule_nr == 400:    rule_str = 'move_highest_from_largest'
+
+    if rule_nr == 1000:   rule_str = 'move_from_highest_rank_sum'
+
+    return rule_str
 # _______________________________________________________________________________________________________
 #
 #  Rule names and numbers (accessible externally) TODO: replace all rule_str                                  

@@ -39,6 +39,7 @@ SUIT_SHORT_NAMES = {
 
 class Rank(OrderedEnum):
     JOKER = 0
+    ACE_ONE = 1
     TWO = 2
     THREE = 3
     FOUR = 4
@@ -55,6 +56,7 @@ class Rank(OrderedEnum):
 
 RANK_SHORT_NAMES = {
     Rank.JOKER: '*',
+    Rank.ACE_ONE: '1',
     Rank.TWO: '2',
     Rank.THREE: '3',
     Rank.FOUR: '4',
@@ -79,7 +81,8 @@ class Card:
     
     def __repr__(self):
         if not self._repr_cache:
-            self._repr_cache = 'Card({}, {})'.format(self.rank, self.suit)
+            # self._repr_cache = 'Card({}, {})'.format(self.rank, self.suit)
+            self._repr_cache = RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
         return self._repr_cache
 
     def __str__(self):
@@ -99,12 +102,12 @@ def get_stack():
     """ Return a shuffled deck
     """
 
-    temp_deck = DECK[:] # copy, not reference; TODO: includes JOKERS which are used in itertools.combinations
+    temp_deck = DECK[:] # copy, not reference; NOTE: includes JOKERS which are used in itertools.combinations
 
-    # remove JOKERS here, add them in game.py discard()
+    # remove JOKER and ACE_ONE
     deck = []
-    for _,c in enumerate(temp_deck):
-        if c.rank != Rank(0):
+    for c in temp_deck:
+        if not c.rank == Rank(0) and not c.rank == Rank(1):
             deck.append(c)
 
     seed()
