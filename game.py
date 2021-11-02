@@ -1,4 +1,4 @@
-import cards, pile, strategy
+import cards, pile, strategy, solution
 from itertools import combinations
 import time
 import pprint                               # https://docs.python.org/3/library/pprint.html
@@ -15,7 +15,7 @@ class Game:
         self.print_out = ''
         
         self.score = 0
-        self.moves = []                     # (card, from_pile, to_pile, rule_str, move_count)
+        self.moves = []                     # (card, from_pile, to_pile, move_count)
         self.rule_counts = {}               # {fcn_metod__name__: counts}
 
         self.strategy = strategy.Strategy(rule_list)
@@ -27,11 +27,9 @@ class Game:
         self.JOKER = cards.Card(0,1)
 
 
-    def play_game(self, game_nr, deck_nr, start_time, GAME_PRINT_OUT):
-        """ Start one game.
+    def play_game(self):
+        """ Play one game.
         """
-
-        self.print_out = GAME_PRINT_OUT
 
         while self.stack: # has cards left
 
@@ -41,18 +39,6 @@ class Game:
             # TODO: fix recursive version
             # if RECURSIVE: self.move_rec()
             # else:         self.run_strategy()
-        
-        # Winning game stats (single game)
-        #
-        if self.has_won():
-
-            print('-----------------------------------------------------------')
-            print(f'Won game nr:    {game_nr}') 
-            print(f'Deck nr:        {deck_nr}') 
-            print(f'Strategy:       {self.strategy.rule_list}') 
-            print(f'Runtime:        {time.time() - start_time:0.2f} s')
-            pprint.pprint(self.get_rule_counts())
-            print('-----------------------------------------------------------\n')
 
        
     def run_strategy(self):
@@ -105,7 +91,7 @@ class Game:
         from_pile_idx = from_pile.index
         to_pile_idx = slots[0]
 
-        self.moves.append([from_pile.last_card(), from_pile_idx, to_pile_idx, rule_str, len(self.moves) + 1])
+        self.moves.append([from_pile.last_card(), from_pile_idx, to_pile_idx, len(self.moves) + 1])
         self.piles[to_pile_idx].add_card(from_pile.pop_card())
 
         if self.print_out:
@@ -204,7 +190,7 @@ class Game:
                     continue
         
                 # print('Discarding from pile:', pile_idx)
-                self.moves.append([remove_card, pile_idx, self.DISCARD_INDEX, len(self.moves) + 1]) # (card, from_pile, to_pile, rule_str, move_count)
+                self.moves.append([remove_card, pile_idx, self.DISCARD_INDEX, len(self.moves) + 1]) # (card, from_pile, to_pile, move_count)
                 self.discard_pile.add_card(self.piles[pile_idx].pop_card())
                 if self.print_out: self.print_current_cards()
         
@@ -216,8 +202,8 @@ class Game:
         # print('Number of moves', len(self.moves))
         for to_pile in range(len(self.piles)):
             move_count = len(self.moves) + 1
-            self.moves.append([self.stack[-1], -1, to_pile, 'deal_from_stack', move_count]) # -1 represents the stack
-                            # (card, from_pile, to_pile, rule_str, move_count)
+            self.moves.append([self.stack[-1], -1, to_pile, move_count]) # -1 represents the stack
+                            # (card, from_pile, to_pile, move_count)
             self.piles[to_pile].add_card(self.stack.pop())
 
         if self.print_out: print('-----------------------------------------')
@@ -267,10 +253,16 @@ class Game:
         return self.rule_counts
 
 
-    def get_moves(self):
+    def get_moves(self, **kwargs):
         """ Return card moves.
+            Optional input 'nodeals' to exclude deals.
         """
-        return self.moves
+        if kwargs.get('excludedeals'):
+            # (card, from_pile, to_pile, move_count); from_pile = -1 repr stack (a deal)
+            moves_excl_deals = [e for e in self.moves if not e[1] == -1]
+            return moves_excl_deals
+        else:
+            return self.moves
 
     
     def get_largest_pile(self, my_list): # largest_idx, largest_pile

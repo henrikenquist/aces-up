@@ -1,4 +1,5 @@
 import game, strategy, cards, solution
+from datetime import timedelta
 import time
 from itertools import permutations
 import collections, functools, operator
@@ -6,20 +7,20 @@ import pprint
 
 # _______________________________________________________________________________________________________
 #
-#  Settings (see strategy.py for more information)                      
+#  Settings (see strategy.py for more information; stored in DB table 'batches')                      
 # _______________________________________________________________________________________________________
 
-number_of_decks = 500
+number_of_decks = 1000
 # rule_list       = [1,2,3,4,5, 10,20, 100,200,300,400, 1000]
 # rule_list       = [1,2,3,4, 10,20, 100,200,300,400, 1000]
-# rule_list       = [1,2,3,4, 10,20, 100,200, 1000] # ~ 400 000 games
-rule_list       = [1,2, 1000]
+# rule_list       = [1,2,3,4, 10,20, 100,200, 1000] # 409 113 games; 2874.33 s (Game average: 7.03 ms)
+rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games; 00:12:49 (1.30 ms)
 
 # db_name         = 'solutions.sqlite'
-db_name         = 'test_01.sqlite'
+db_name         = 'test_2021-11-02.sqlite'
 
-USE_SUB_SETS        = True
-PERMUTE             = True
+USE_SUB_SETS        = False
+PERMUTE             = False
 STRATEGY_PRINT_OUT  = False
 GAME_PRINT_OUT      = False
 
@@ -30,6 +31,8 @@ GAME_PRINT_OUT      = False
 
 # Game counter
 game_counts     = 0
+# Batch flag
+new_batch       = True
 # Statistics
 results         = []  # stats for each game won
 highest_score   = 0
@@ -41,7 +44,7 @@ score_counts    = {}  # {score: counts}, scores of all games played, used for di
 deck_counts     = {}  # {deck: counts}, scores of all games played, used for distribution plot
 
 tic             = time.perf_counter()
-start_time      = time.time()
+start_time      = time.localtime()
 
 # _______________________________________________________________________________________________________
 #
@@ -50,111 +53,118 @@ start_time      = time.time()
 
 solution.create_db(db_name) # run once to create solutions database
 
-print('\nStarting...\n')
+print('\n\n===========================================================')
+print(f'Start time:     {time.strftime("%H:%M:%S", start_time)}')
 
 for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategies in current main loop iteration
                                                 # start counting games at 1, not 0 (for human reading)
     strategies  = strategy.get_strategies(rule_list, USE_SUB_SETS, PERMUTE)
     deck        = cards.get_stack()    
         
-    for curr_strategy in strategies: # BUG when both options are True
+    for curr_strategy in strategies:
 
         game_counts += 1
         curr_game = game.Game(deck, curr_strategy)
-        curr_game.play_game(game_counts, deck_nr, start_time, GAME_PRINT_OUT)
+        curr_game.play_game()
 
         # Increment value for 'score'. Append if not in dictionary.
         # Each score is a key in dict score_counts: {score : number of games with that score}
         score_counts[curr_game.get_score()] = score_counts.get(curr_game.get_score(),0) + 1
         total_rules.append(curr_game.get_rule_counts())
         
-        # Update results for current won game
-        # TODO save results in sqlite3 database
-        # should losing decks be stored for future reference?
-        # should stats för each game be stored (or a summary like the print out?)
-        if curr_game.has_won():
+        # Update results for current won game if is unique solution
+        if curr_game.has_won() and solution.is_unique_solution(db_name, deck, curr_game.get_moves()):
             # terminal printout
             deck_counts[deck_nr] = deck_counts.get(deck_nr,0) + 1
             winning_rules.append(curr_game.get_rule_counts())
-            results.append(([deck, curr_strategy, curr_game.get_rule_counts(), curr_game.get_moves()]))
-            # database
-            solution.save_in_db(db_name, deck, curr_strategy, curr_game.get_moves())
+            results.append(([deck, curr_game.get_moves(), curr_strategy, curr_game.get_rule_counts()]))
+            if new_batch:
+                batch_id = solution.update_batches(db_name, number_of_decks, str(sorted(rule_list)), PERMUTE, USE_SUB_SETS)
+                new_batch = False
+            rule_counts_str = str(sorted(curr_game.get_rule_counts().items(), key=lambda x:x[1], reverse=True))
+            solution.save_in_db(db_name, deck, curr_game.get_moves(), rule_counts_str, curr_strategy, batch_id)
+            if GAME_PRINT_OUT:
+                print('-----------------------------------------------------------')
+                print(f'Won game nr:    {game_counts}') 
+                print(f'Deck nr:        {deck_nr}') 
+                print(f'Strategy:       {curr_strategy}') 
+                print(f'Runtime:        {time.time() - start_time:0.2f} s')
+                pprint.pprint(sorted(curr_game.get_rule_counts().items(), key=lambda x:x[1], reverse=True))
+                # print(curr_game.get_moves())
+                # pprint.pprint(curr_game.get_moves(excludedeals=True))
+                print('-----------------------------------------------------------\n')
+                print('Resuming...\n')
 
-        # For print out of losing games
+        # Track best game so far
         if curr_game.get_score() > highest_score:
             highest_score = curr_game.get_score()
             best_strategy = curr_strategy
-            deck_best = deck_nr
+            best_deck = deck_nr
 
         if STRATEGY_PRINT_OUT:
             print('\n===========================================================')
             print(f'Deck: {deck_nr}  Game: {game_counts}  Strategy: {curr_strategy}')
 
 
-# All loops are finished
-toc= time.perf_counter()
-
-
-# _______________________________________________________________________________________________________
-#
-#  Database                                 
-# _______________________________________________________________________________________________________
-
-
-
+# Finally
+print(f'Stop time:      {time.strftime("%H:%M:%S", time.localtime())}')
+toc = time.perf_counter()
+elapsed_time_str = '{:0>8}'.format(str(timedelta(seconds = round(toc - tic))))
+print(f'Elapsed time:   {elapsed_time_str}    (Mean: {1000*(toc - tic)/game_counts:0.2f} ms)')
 
 # _______________________________________________________________________________________________________
 #
 #  Statistics                                 
 # _______________________________________________________________________________________________________
 
-# Summary
-print('\n===========================================================')
-print(f'Number of wins:    {len(results)}')
-print(f'Number of games:   {game_counts}')
-print(f'Number of decks:   {number_of_decks}')
-print(f'Proportion:        {100*len(results)/number_of_decks:0.2f} % ({len(results)/number_of_decks:0.6f})')
+# Settings
+print('===========================================================')
+print(f'Unique solutions: {len(results)}')
+print(f'Games:            {game_counts}')
+print(f'Decks:            {number_of_decks}')
 if len(results) > 0:
-    print(f'Odds:              {number_of_decks/len(results):0.2f}')
-print(f'Rule list:         {rule_list}')
-print(f'Use sub sets:      {USE_SUB_SETS}')
-print(f'Permute:           {PERMUTE}')
-print(f'Elapsed time:      {toc - tic:0.2f} s (Game average: {1000*(toc - tic)/game_counts:0.2f} ms)')
+    print(f'Proportion:       {100*len(results)/number_of_decks:0.2f} % ({len(results)/number_of_decks:0.6f})')
+    print(f'Odds:             {number_of_decks/len(results):0.2f}')
+print(f'Rule list:        {rule_list}')
+print(f'Use sub sets:     {USE_SUB_SETS}')
+print(f'Permute:          {PERMUTE}')
+# https://stackoverflow.com/questions/775049/how-do-i-convert-seconds-to-hours-minutes-and-seconds
+
+# Unique solutions
+if len(results) > 0:
+    print('\n===========================================================')
+    print(f'Unique solutions per deck ({len(deck_counts)} of {number_of_decks} decks):')
+    print('\n')
+    pprint.pprint(sorted(deck_counts.items(), key=lambda x:x[1], reverse=True))
+    # sorted(data.items(), key=lambda x:x[1])
 
 # Scores
-print('===========================================================')
+print('\n===========================================================')
 if len(results) == 0:
-    print(f'Highest score:      {highest_score}')
-    print(f'Strategy:           {best_strategy}\r')
-    print(f'Deck nr:            {deck_best}\r')
-    print('\n')
-print(f'Score distribution for {game_counts} games:\r')
+    print(f'Highest score:     {highest_score}')
+    print(f'Strategy:          {best_strategy}\r')
+    print(f'Deck nr:           {best_deck}\r')
+print(f'Score distribution for {game_counts} games:')
+if PERMUTE:
+    print('(NB: includes potential duplicates since PERMUTE = True)')
 print('\n')
 pprint.pprint(score_counts)
+# pprint.pprint(sorted(score_counts.items(), key=lambda x:x[1], reverse=True))
 
 # Rules
-print('===========================================================')
+print('\n===========================================================')
 if len(results) > 0:
     winning_rule_stats = dict(functools.reduce(operator.add, map(collections.Counter, winning_rules)))
-    print(f'Winning rule counts ({sum(winning_rule_stats.values())})')
+    print(f'Solutions rule counts ({sum(winning_rule_stats.values())})')
     print('\n')
-    pprint.pprint(winning_rule_stats)
+    pprint.pprint(sorted(winning_rule_stats.items(), key=lambda x:x[1], reverse=True))
     print('\n===========================================================')
 total_rule_stats = dict(functools.reduce(operator.add, map(collections.Counter, total_rules)))
 print(f'Rule counts for {game_counts} games ({sum(total_rule_stats.values())}):')
 print('\n')
-pprint.pprint(total_rule_stats)
-
-# Decks
-if len(results) > 0:
-    print('===========================================================')
-    print(f'Wins per deck for {number_of_decks} decks:\r')
-    print('\n')
-    pprint.pprint(deck_counts)
-
+pprint.pprint(sorted(total_rule_stats.items(), key=lambda x:x[1], reverse=True))
 
 print('\n===========================================================\n\n')
-
 
 
 # https://www.geeksforgeeks.org/python-sum-list-of-dictionaries-with-same-key/
