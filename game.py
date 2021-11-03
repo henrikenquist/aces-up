@@ -1,4 +1,4 @@
-import cards, pile, strategy, solution
+import cards, pile, strategy
 from itertools import combinations
 import time
 import pprint                               # https://docs.python.org/3/library/pprint.html

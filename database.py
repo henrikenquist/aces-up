@@ -163,7 +163,7 @@ def is_unique_solution(db_name, curr_deck, curr_moves):
 # _______________________________________________________________________________________________________
 #
 # 
-def save_in_db(db_name, deck, moves, rule_counts, strategy, batch_id):
+def save_solution(db_name, deck, moves, rule_counts, strategy, batch_id):
     """ Save data for new unique solution to database.
     """
 
@@ -270,7 +270,7 @@ def update_solutions(db_name, deck_id, moves_id, strategy_id, batch_id):
     return solution_id
 
 
-def update_batches(db_name, n_decks, rule_list, permute, sub_sets):
+def update_batches(db_name, n_decks, rule_list, permute, sub_sets, games, runtime):
     """ Add batch if not in database. Return batch_id.
 
         A batch is a set of games defined by number of decks in .
@@ -285,8 +285,8 @@ def update_batches(db_name, n_decks, rule_list, permute, sub_sets):
     cur.execute('SELECT COUNT(*) FROM batches')
     batch_id = cur.fetchone()[0] + 1
 
-    cur.execute('''INSERT INTO batches (batch_id, n_decks, rule_list, permute, sub_sets) VALUES (?,?,?,?,?)''',
-                                       (batch_id, n_decks, rule_list, permute, sub_sets))
+    cur.execute('''INSERT INTO batches (batch_id, n_decks, rule_list, permute, sub_sets, games, runtime) VALUES (?,?,?,?,?,?,?)''',
+                                       (batch_id, n_decks, rule_list, permute, sub_sets, games, runtime))
 
     conn.commit() 
     cur.close()
@@ -294,10 +294,41 @@ def update_batches(db_name, n_decks, rule_list, permute, sub_sets):
     return batch_id
 
 
+def update_runtime(db_name, batch_id, runtime):
+    """ Update runtime for batch.
+    """
+    conn = sqlite3.connect(db_name)
+    cur = conn.cursor()
+    cur.execute('''UPDATE batches SET runtime=? WHERE batch_id=?''', (runtime, batch_id))
+
+    conn.commit() 
+    cur.close()
+
+
 # _______________________________________________________________________________________________________
 #
 #  Reading methods
 # _______________________________________________________________________________________________________
+
+def get_avg_runtime(db_name):
+    """ Calculate average runtime from batches.
+    """
+    avg_runtime = 0.001 # default to 1 ms
+
+    conn = sqlite3.connect(db_name)
+    cur = conn.cursor()
+    cur.execute('''SELECT games FROM batches''')
+
+    n_games = [sum(x) for x in zip(*cur.fetchall())]
+    cur.execute('''SELECT runtime FROM batches''')
+    tot_time = [sum(x) for x in zip(*cur.fetchall())]
+
+    avg_runtime = tot_time[0]/n_games[0]
+
+    cur.close()
+
+    return avg_runtime
+
 
 def get_rule_counts(db_name, **kwargs):
     """ Total number of times each rule has been used in solutions.
@@ -372,7 +403,9 @@ def create_db(db_name):
                                             n_decks     INTEGER,
                                             rule_list   STRING,
                                             permute     BOOLEAN,
-                                            sub_sets    BOOLEAN
+                                            sub_sets    BOOLEAN,
+                                            games       INTEGER,
+                                            runtime     INTEGER
                                             )''')
 
     cur.execute('''CREATE TABLE IF NOT EXISTS solutions (

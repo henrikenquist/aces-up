@@ -1,26 +1,28 @@
-import game, strategy, cards, solution
+import game, strategy, cards, database, helpers
 from datetime import timedelta
 import time
 from itertools import permutations
 import collections, functools, operator
 import pprint
+from sys import exit
+import winsound
 
 # _______________________________________________________________________________________________________
 #
 #  Settings (see strategy.py for more information; stored in DB table 'batches')                      
 # _______________________________________________________________________________________________________
 
-number_of_decks = 1000
+number_of_decks = 100
 # rule_list       = [1,2,3,4,5, 10,20, 100,200,300,400, 1000]
 # rule_list       = [1,2,3,4, 10,20, 100,200,300,400, 1000]
-# rule_list       = [1,2,3,4, 10,20, 100,200, 1000] # 409 113 games; 2874.33 s (Game average: 7.03 ms)
-rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games; 00:12:49 (1.30 ms)
+# rule_list       = [1,2,3,4, 10,20, 100,200, 1000]
+rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games
 
 # db_name         = 'solutions.sqlite'
 db_name         = 'test_2021-11-02.sqlite'
 
 USE_SUB_SETS        = False
-PERMUTE             = False
+PERMUTE             = True
 STRATEGY_PRINT_OUT  = False
 GAME_PRINT_OUT      = False
 
@@ -32,7 +34,7 @@ GAME_PRINT_OUT      = False
 # Game counter
 game_counts     = 0
 # Batch flag
-new_batch       = True
+has_saved_batch = False
 # Statistics
 results         = []  # stats for each game won
 highest_score   = 0
@@ -43,19 +45,30 @@ strategy_list   = []
 score_counts    = {}  # {score: counts}, scores of all games played, used for distribution plot
 deck_counts     = {}  # {deck: counts}, scores of all games played, used for distribution plot
 
-tic             = time.perf_counter()
-start_time      = time.localtime()
 
 # _______________________________________________________________________________________________________
 #
 #  Main loop                                 
 # _______________________________________________________________________________________________________
 
-solution.create_db(db_name) # run once to create solutions database
+# Calculate number of games and estimated runtime
+n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(db_name, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS)
+print('\n')
+print(f'Number of games:    {n_games}')
+print(f'Estimated runtime:  {runtime_str} ({round(runtime_sec)} s / {1000*runtime_sec/n_games:0.2f} ms)')
+response = input('Continue (return) or quit (q)?  ')
+if response == 'q': exit()
 
+# Timer
+tic             = time.perf_counter()
+start_time      = time.localtime()
 print('\n\n===========================================================')
 print(f'Start time:     {time.strftime("%H:%M:%S", start_time)}')
 
+# Database
+database.create_db(db_name) # if not existing
+
+# Main loop
 for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategies in current main loop iteration
                                                 # start counting games at 1, not 0 (for human reading)
     strategies  = strategy.get_strategies(rule_list, USE_SUB_SETS, PERMUTE)
@@ -73,16 +86,16 @@ for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategi
         total_rules.append(curr_game.get_rule_counts())
         
         # Update results for current won game if is unique solution
-        if curr_game.has_won() and solution.is_unique_solution(db_name, deck, curr_game.get_moves()):
+        if curr_game.has_won() and database.is_unique_solution(db_name, deck, curr_game.get_moves()):
             # terminal printout
             deck_counts[deck_nr] = deck_counts.get(deck_nr,0) + 1
             winning_rules.append(curr_game.get_rule_counts())
             results.append(([deck, curr_game.get_moves(), curr_strategy, curr_game.get_rule_counts()]))
-            if new_batch:
-                batch_id = solution.update_batches(db_name, number_of_decks, str(sorted(rule_list)), PERMUTE, USE_SUB_SETS)
-                new_batch = False
+            if not has_saved_batch:
+                batch_id = database.update_batches(db_name, number_of_decks, str(sorted(rule_list)), PERMUTE, USE_SUB_SETS, n_games, runtime_sec)
+                has_saved_batch = True
             rule_counts_str = str(sorted(curr_game.get_rule_counts().items(), key=lambda x:x[1], reverse=True))
-            solution.save_in_db(db_name, deck, curr_game.get_moves(), rule_counts_str, curr_strategy, batch_id)
+            database.save_solution(db_name, deck, curr_game.get_moves(), rule_counts_str, curr_strategy, batch_id)
             if GAME_PRINT_OUT:
                 print('-----------------------------------------------------------')
                 print(f'Won game nr:    {game_counts}') 
@@ -110,8 +123,11 @@ for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategi
 print(f'Stop time:      {time.strftime("%H:%M:%S", time.localtime())}')
 toc = time.perf_counter()
 elapsed_time_str = '{:0>8}'.format(str(timedelta(seconds = round(toc - tic))))
-print(f'Elapsed time:   {elapsed_time_str}    (Mean: {1000*(toc - tic)/game_counts:0.2f} ms)')
+print(f'Elapsed time:   {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_counts:0.2f} ms)')
+if has_saved_batch:
+    database.update_runtime(db_name, batch_id, (toc - tic))
 
+winsound.Beep(2000, 1000)
 # _______________________________________________________________________________________________________
 #
 #  Statistics                                 
@@ -168,3 +184,5 @@ print('\n===========================================================\n\n')
 
 
 # https://www.geeksforgeeks.org/python-sum-list-of-dictionaries-with-same-key/
+
+
