@@ -4,11 +4,11 @@ from itertools import permutations
 
 # _______________________________________________________________________________________________________
 #
-#  Accessible externally                                 
+# Reading methods                                
 # _______________________________________________________________________________________________________
 
 def get_strategies(rule_list, USE_SUB_SETS, PERMUTE):
-    """ Return list of strategies (list of rule lists)
+    """ Return list of strategies (list of lists or permutation objects)
     """
 
     strategies = [] # a list of lists
@@ -62,9 +62,10 @@ def get_rule_str(rule_nr):
     if rule_nr == 1000:   rule_str = 'move_from_highest_rank_sum'
 
     return rule_str
+
 # _______________________________________________________________________________________________________
 #
-#  Rule names and numbers (accessible externally) TODO: replace all rule_str                                  
+#  Rules class                              
 # _______________________________________________________________________________________________________
 
 class Rules(enum.Enum):
@@ -187,7 +188,8 @@ class Strategy:
         for i in range(len(curr_game.piles)):
 
             temp_pile = curr_game.piles[i]
-            if (temp_pile.last_is_ace() and
+            if (temp_pile.length() > 1 and
+                temp_pile.last_is_ace() and
                 temp_pile.has_suit_below()):
 
                 from_pile = temp_pile
@@ -234,7 +236,8 @@ class Strategy:
         for i in range(len(curr_game.piles)):
 
             temp_pile = curr_game.piles[i]
-            if (temp_pile.last_is_ace() and
+            if (temp_pile.length() > 1 and
+                temp_pile.last_is_ace() and
                 temp_pile.length() > max_pile_length):
 
                 max_pile_length = temp_pile.length()
@@ -423,7 +426,7 @@ class Strategy:
 
             temp_pile = curr_game.piles[i]
 
-            if (temp_pile.length() >= max_pile_length and
+            if (temp_pile.length() > max_pile_length and
                 temp_pile.last_card().rank > max_rank):
 
                 max_pile_length = temp_pile.length()

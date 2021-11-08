@@ -104,33 +104,6 @@ class Game:
         self.discard()
 
 
-    # # Recursive version
-    # def move_rec(self):
-    #     ### --------------  Move: Recursive version --------------  ###
-    #     ###
-    #     ### TODO recursion doesn't work
-    #     ### could be because rule_moved_card is referenced, not copied
-    #     ### and altered in the move rule functions messing things up
-    #     ### in the backtracking
-
-    #     while self.piles_ok():
-    #         for _,move_rule_fcn in enumerate(self.rule_funcs):
-    #             if not self.piles_ok(): continue
-
-    #             self.card_is_moved = False
-    #             self.card_is_moved = move_rule_fcn()
-    #             self.nr_fcn_calls += 1
-
-    #         if self.card_is_moved:
-    #             self.discard()
-    #             self.nr_fcn_moves += 1
-    #             old_piles = self.piles[:]   # copy, not reference!
-    #             self.move_rec()                 # go deeper i.e. start over with same rule from the beginning
-    #             self.piles = old_piles[:]   # backtrack: restore old state
-
-    #     return
-
-
     def discard(self): 
         """ Discard all possible cards.
         """
@@ -255,7 +228,7 @@ class Game:
 
     def get_moves(self, **kwargs):
         """ Return card moves.
-            Optional input 'nodeals' to exclude deals.
+            Optional input 'excludedeals' to exclude deals.
         """
         if kwargs.get('excludedeals'):
             # (card, from_pile, to_pile, move_count); from_pile = -1 repr stack (a deal)
@@ -299,5 +272,32 @@ class Game:
     
         return [i for i,e in enumerate(self.piles) if e.length() == 0]
 
+
+    # # Recursive version
+
+    # def move_rec(self):
+    #     ### --------------  Move: Recursive version --------------  ###
+    #     ###
+    #     ### TODO recursion doesn't work
+    #     ### could be because rule_moved_card is referenced, not copied
+    #     ### and altered in the move rule functions messing things up
+    #     ### in the backtracking
+
+    #     while self.piles_ok():
+    #         for _,move_rule_fcn in enumerate(self.rule_funcs):
+    #             if not self.piles_ok(): continue
+
+    #             self.card_is_moved = False
+    #             self.card_is_moved = move_rule_fcn()
+    #             self.nr_fcn_calls += 1
+
+    #         if self.card_is_moved:
+    #             self.discard()
+    #             self.nr_fcn_moves += 1
+    #             old_piles = self.piles[:]   # copy, not reference!
+    #             self.move_rec()                 # go deeper i.e. start over with same rule from the beginning
+    #             self.piles = old_piles[:]   # backtrack: restore old state
+
+    #     return
 
     

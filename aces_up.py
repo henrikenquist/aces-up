@@ -12,17 +12,19 @@ import winsound
 #  Settings (see strategy.py for more information; stored in DB table 'batches')                      
 # _______________________________________________________________________________________________________
 
-number_of_decks = 100
+number_of_decks = 1
 # rule_list       = [1,2,3,4,5, 10,20, 100,200,300,400, 1000]
 # rule_list       = [1,2,3,4, 10,20, 100,200,300,400, 1000]
 # rule_list       = [1,2,3,4, 10,20, 100,200, 1000]
-rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games
+# rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games
+# rule_list       = [1, 10,20, 100, 1000]
+rule_list       = [2,1,100,20,1000]
 
 # db_name         = 'solutions.sqlite'
-db_name         = 'test_2021-11-02.sqlite'
+db_name         = 'aces_up_production.sqlite'
 
 USE_SUB_SETS        = False
-PERMUTE             = True
+PERMUTE             = False
 STRATEGY_PRINT_OUT  = False
 GAME_PRINT_OUT      = False
 
@@ -54,6 +56,9 @@ deck_counts     = {}  # {deck: counts}, scores of all games played, used for dis
 # Calculate number of games and estimated runtime
 n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(db_name, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS)
 print('\n')
+if n_games > 1000 and (STRATEGY_PRINT_OUT or GAME_PRINT_OUT):
+    print('WARNING: printouts will increase estimated runtime')
+print(f'Rule list:          {rule_list}')
 print(f'Number of games:    {n_games}')
 print(f'Estimated runtime:  {runtime_str} ({round(runtime_sec)} s / {1000*runtime_sec/n_games:0.2f} ms)')
 response = input('Continue (return) or quit (q)?  ')
@@ -140,14 +145,14 @@ print(f'Games:            {game_counts}')
 print(f'Decks:            {number_of_decks}')
 if len(results) > 0:
     print(f'Proportion:       {100*len(results)/number_of_decks:0.2f} % ({len(results)/number_of_decks:0.6f})')
-    print(f'Odds:             {number_of_decks/len(results):0.2f}')
+    print(f'Odds:             {number_of_decks/len(results):0.1f}')
 print(f'Rule list:        {rule_list}')
 print(f'Use sub sets:     {USE_SUB_SETS}')
 print(f'Permute:          {PERMUTE}')
 # https://stackoverflow.com/questions/775049/how-do-i-convert-seconds-to-hours-minutes-and-seconds
 
 # Unique solutions
-if len(results) > 0:
+if 25 > len(results) > 0:
     print('\n===========================================================')
     print(f'Unique solutions per deck ({len(deck_counts)} of {number_of_decks} decks):')
     print('\n')
