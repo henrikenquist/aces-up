@@ -9,11 +9,16 @@ import numpy as np
 #  Reading methods
 # _______________________________________________________________________________________________________
 
-def get_db_info(db_name, *args, **kwargs):
+def get_db_info(db_name, *args):
     """ Get database info.
-        Use input arguments to select type of info:
+        Return dictionary with input args as keys.
+
+        Input args to select info type:
+        - 'all'
         - 'n_batches'
         - 'batch_ids'
+        - 'avg_runtimes'
+        - 'cum_n_decks'
     """
 
     conn = sqlite3.connect(db_name)
@@ -23,24 +28,48 @@ def get_db_info(db_name, *args, **kwargs):
 
     # TODO expande with further functionality
     for item in args:
-        if item == 'n_batches':
+
+        if item == 'n_batches' or item == 'all':
             cur.execute('''SELECT COUNT(*) FROM batches ''')
             n_batches = cur.fetchone()
             db_info['n_batches'] = n_batches[0]
-        if item == 'batch_ids':
+
+        if item == 'batch_ids' or item == 'all':
             batch_ids = []
             cur.execute('''SELECT batch_id FROM batches ORDER BY batch_id ASC ''')
             batch_rows = cur.fetchall()
+
             for batch in batch_rows:
                 batch_ids.append(batch[0])
+
             db_info['batch_ids'] = batch_ids
-        if item == 'cum_n_batches':
-            batch_ids = []
+
+        if item == 'avg_runtimes' or item == 'all':
             cur.execute('''SELECT batch_id FROM batches ORDER BY batch_id ASC''')
             batch_rows = cur.fetchall()
-            for batch in batch_rows:
-                batch_ids.append(batch[0])
-            db_info['batch_ids'] = batch_ids
+            
+            avg_runtimes = []
+
+            for batch_id in batch_rows:
+                _, n_games, runtime = get_batch_info(db_name, batch_id[0])
+                avg_runtimes.append(runtime/n_games)
+
+            db_info['avg_runtimes'] = avg_runtimes
+        
+        
+        if item == 'cum_n_decks' or item == 'all':
+            cur.execute('''SELECT batch_id FROM batches ORDER BY batch_id ASC''')
+            batch_rows = cur.fetchall()
+            
+            cum_n_decks = []
+            running_val = 0
+
+            for batch_id in batch_rows:
+                n_decks, _, _ = get_batch_info(db_name, batch_id[0])
+                running_val += n_decks
+                cum_n_decks.append(running_val)
+
+            db_info['cum_n_decks'] = cum_n_decks
 
     cur.close()
 
@@ -74,30 +103,36 @@ def get_avg_runtime(db_name, new_decks=0):
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
-    avg_runtime = 0.001 # default to 1 ms
+    avg_runtime     = 0.001 # default to 1 ms if empty database
+    lin_reg_limit   = 10    # minimum n batches to use linear regression 
+    runtimes        = []
+    cum_n_decks     = []
+    running_val     = 0
+    db_info         = get_db_info(db_name, 'batch_ids')
+    batch_ids       = db_info['batch_ids']
 
-    runtimes    = []
-    cum_n_decks = []
-    running_val = 0
-    db_info     = get_db_info(db_name, 'batch_ids')
-    batch_ids   = db_info['batch_ids']
+    # Simple average for small number of batches:
+    if 0 < len(batch_ids) < lin_reg_limit:
+        cur.execute('''SELECT n_games FROM batches''')
+        n_games = [sum(x) for x in zip(*cur.fetchall())][0] # [0] since value returned as list
+        cur.execute('''SELECT runtime FROM batches''')
+        tot_time = [sum(x) for x in zip(*cur.fetchall())][0]
+        avg_runtime = tot_time/n_games
 
-    for batch_id in batch_ids:
-        n_decks, n_games, runtime = get_batch_info(db_name, batch_id)
-        running_val += n_decks
-        runtimes.append(runtime/n_games)
-        cum_n_decks.append(running_val)
+    # Linear regression for larger number of batches (or rather, decks):
+    elif len(batch_ids) >= lin_reg_limit:
+        # print('lin. regr. used for runtime average')
+        for batch_id in batch_ids:
+            n_decks, n_games, runtime = get_batch_info(db_name, batch_id)
+            running_val += n_decks
+            runtimes.append(runtime/n_games)
+            cum_n_decks.append(running_val)
 
-    slope, intercept = np.polyfit(cum_n_decks, runtimes, 1)
+        # TODO: Should weigh runtime according to number of games in batch
+        # Now each batch is treated equally, regardless of 1 game or 1,000,000 games
+        slope, intercept = np.polyfit(cum_n_decks, runtimes, 1)
 
-    avg_runtime = intercept + (running_val + new_decks) * slope
-
-    # Simple average:
-    # cur.execute('''SELECT games FROM batches''')
-    # n_games = [sum(x) for x in zip(*cur.fetchall())][0] # [0] since value returned as list
-    # cur.execute('''SELECT runtime FROM batches''')
-    # tot_time = [sum(x) for x in zip(*cur.fetchall())][0]
-    # avg_runtime = tot_time/n_games
+        avg_runtime = intercept + (running_val + new_decks) * slope
 
     cur.close()
 

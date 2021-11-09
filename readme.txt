@@ -1,6 +1,6 @@
 _______________________________________________________________________________________________
 
-Aces Up
+ Aces Up - Intro
 _______________________________________________________________________________________________________
 
 1.  Deal four cards in a row face up.
@@ -30,6 +30,28 @@ which means all cards have been discarded except for the four aces, thus the nam
 Source: https://en.wikipedia.org/wiki/Aces_Up
 
 
+_______________________________________________________________________________________________________
+
+ How to use the code
+_______________________________________________________________________________________________________
+
+Specify settings before running aces_up.py (i.e. the main program)
+
+Example:
+
+db_name             = 'aces_up_production.sqlite'
+rule_list           = [1, 1000]
+number_of_decks     = 1
+USE_SUB_SETS        = False
+PERMUTE             = False
+STRATEGY_PRINT_OUT  = False     # display overview info for each strategy while running
+GAME_PRINT_OUT      = False     # display detailed info for each game while running
+
+Note: Printouts increase runtime.
+
+sandbox.py contains boilerplate code for various tests and printouts.
+
+Tip: Use DB Browser or similar to inspect the database (https://sqlitebrowser.org/)
 
 _______________________________________________________________________________________________________
 
@@ -37,37 +59,65 @@ ________________________________________________________________________________
 _______________________________________________________________________________________________________
 
 Group A
- 1: ACE_FROM_LARGEST                            ace from largest pile
- 2: ACE_FROM_SMALLEST                           ace from smallest pile
- 3: ACE_HAS_SUIT_BELOW                          reveal card of same suit;
-                                                NOTE doesn't guarantee a move
- 4: ACE_MAX                                     move ace from pile with largest card sum
+ 1: ACE_MAX                                     ace from pile with largest card sum;
+ 2: ACE_HAS_SUIT_BELOW                          reveal card of same suit; NOTE doesn't guarantee a move
+ 3: ACE_FROM_SMALLEST                           ace from smallest pile
+ 4: ACE_FROM_LARGEST                            ace from largest pile
  5: FIRST_ACE                                   ace from first pile
 
-Group B                                         NOTE: doesn't guarantee a move
- 10: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW      reveal higher card of same suit from largest pile
- 20: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW     reveal higher card of same suit from smallest pile
- 30: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW           highest card which reveals higher card of same suit
+Group B                                         NOTE: B-rules don't guarantee a move
+ 10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW     reveal higher card of same suit from smallest pile
+ 20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW      reveal higher card of same suit from largest pile
 
-Group C
- 100: HIGHEST_FROM_LARGEST                      highest card from largest pile
- 200: HIGHEST_FROM_SMALLEST                     highest card from smallest pile
- 300: HIGHEST_CARD                              first of highest possible cards;
-                                                NOTE: guarantees a move if any slot is empty
- 400: MAX_SUM                                   move from pile with largest card sum
+Group C                                         
+ 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW          highest card which reveals higher card of same suit; NOTE doesn't guarantee a move
+ 200: HIGHEST_CARD                              highest card from any pile
+ 300: HIGHEST_FROM_SMALLEST                     highest card from smallest pile
+ 400: HIGHEST_FROM_LARGEST                      highest card from largest pile
 
-NOTE: strategy = [5, 400] seems to be same as in https://github.com/jwnorman/aces-up/blob/master/idiots_delight.py
+Group D                                         
+ 1000: ANY_FROM_MAX_RANK_SUM                    any card from pile with largest card sum
 
-NOTE: place rules in priority order (i.e. the strategy)
-NOTE: duplication of a rule doesn't change the strategy
-NOTE: Alway include rule 1 and/or 2 AND rule 60
+
+Rules are evaluated in order.
 
 Examples:
-
  strategy = [1,300]
- strategy = [2,300]
- strategy = [1,2,300]
- strategy = [3,2,1, 30,20,10, 300,200,100]
+ strategy = [300, 1]
+ strategy = [3,2,1, 30,20,10, 300,200, 1000]
+ 
+After a move (and following discards), rules are evaluated from beginning of the list. 
+As soon as a move has been made, no further rules in list are checked.
+This means that any rule in the list after a rule which guarantees a move is never evaluated.
+
+Example: 
+ strategy = [200, 1000]     # rule 1000 is never evaluated ('used') since 200 guarantees a move.
+
+NOTE: Order of rules in list only matters if PERMUTE is set to False
+NOTE: Duplication of a rule doesn't change the strategy
+
+
+
+_______________________________________________________________________________________________________
+
+ Game options                                 
+_______________________________________________________________________________________________________
+
+Automate testing of various strategies. Can be used in combination.
+
+USE_SUB_SETS    = True      True: run games for all subsets of rule list
+                            [1,20,300] -> [ [1], [1,20], [1,20,300] ]
+PERMUTE         = True      True: run games for all permutations of rules in rule list
+                            [1,20,300] -> [ [1,20,300], [1,300,20], [300,1,20],
+                                             20,1,300], [20,300,1], [300,20,1] etc ]
+
+                            if USE_SUB_SETS is True: permute all subsets of rule list
+
+For number_of_decks = 1 and n rules:
+
+USE_SUB_SETS: True  -> n games
+PERMUTE: True       -> n! games
+Both: True          -> n! + (n-1)! + (n-2)! + ... + 1 games (e.g. 8 rules runs 45 512 games)
 
 
 ______________________________________________________________________________________________________
@@ -86,7 +136,7 @@ Implementations from other people
 _______________________________________________________________________________________________________
 
 Simulation and probability distribution:    https://github.com/jwnorman/aces-up
-Seems to use strategy = [5, 400]
+Seems to use strategy = [1, 1000]
 Proportion: 0.007057
 Odds:       141.7
 

@@ -12,17 +12,11 @@ import winsound
 #  Settings (see strategy.py for more information; stored in DB table 'batches')                      
 # _______________________________________________________________________________________________________
 
-number_of_decks = 1
-# rule_list       = [1,2,3,4,5, 10,20, 100,200,300,400, 1000]
-# rule_list       = [1,2,3,4, 10,20, 100,200,300,400, 1000]
-# rule_list       = [1,2,3,4, 10,20, 100,200, 1000]
-# rule_list       = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games
-# rule_list       = [1, 10,20, 100, 1000]
-rule_list       = [2,1,100,20,1000]
+db_name = 'aces_up_test.sqlite'
 
-# db_name         = 'solutions.sqlite'
-db_name         = 'aces_up_production.sqlite'
-
+# rule_list           = [1,2, 10,20, 100,200, 1000] # 100 decks, true, true: 591 300 games
+rule_list           = [2,1, 100, 10, 1000]
+number_of_decks     = 10000
 USE_SUB_SETS        = False
 PERMUTE             = False
 STRATEGY_PRINT_OUT  = False
@@ -53,6 +47,9 @@ deck_counts     = {}  # {deck: counts}, scores of all games played, used for dis
 #  Main loop                                 
 # _______________________________________________________________________________________________________
 
+# Database
+database.create_db(db_name) # if not existing
+
 # Calculate number of games and estimated runtime
 n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(db_name, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS)
 print('\n')
@@ -69,9 +66,6 @@ tic             = time.perf_counter()
 start_time      = time.localtime()
 print('\n\n===========================================================')
 print(f'Start time:     {time.strftime("%H:%M:%S", start_time)}')
-
-# Database
-database.create_db(db_name) # if not existing
 
 # Main loop
 for deck_nr in range(1, number_of_decks + 1):   # use same deck for all strategies in current main loop iteration

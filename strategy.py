@@ -141,12 +141,10 @@ class Strategy:
 
         return rule_funcs
 
-
     # _______________________________________________________________________________________________________
     #
     #  Rule functions                            
     # _______________________________________________________________________________________________________
-
 
     ### -------------- Group A --------------  ###
 
@@ -177,7 +175,6 @@ class Strategy:
         
         return rule_can_move
 
-
     def move_ace_suit_below(self, curr_game):
         """ Move the first ace which has card of same suit below.
         """
@@ -199,7 +196,6 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
 
     def move_ace_from_smallest(self, curr_game):
         """ Move from the smallest pile with an ace.
@@ -223,7 +219,6 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
 
     def move_ace_from_largest(self, curr_game):
         """ Move from the largest pile with an ace.
@@ -249,7 +244,6 @@ class Strategy:
         
         return rule_can_move
 
-
     def move_first_ace(self, curr_game):
         """ Move first ace.
         """
@@ -272,9 +266,7 @@ class Strategy:
         return rule_can_move
 
 
-
     ### -------------- Group B --------------  ###
-
 
 
     def move_from_smallest_has_higher_in_suit_below(self, curr_game):
@@ -302,7 +294,6 @@ class Strategy:
         
         return rule_can_move
 
-    
     def move_from_largest_has_higher_in_suit_below(self, curr_game):
         """ Move from largest pile where card has a card of same suit below.
         """
@@ -326,8 +317,6 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
-
 
 
     ### -------------- Group C --------------  ###
@@ -358,7 +347,6 @@ class Strategy:
         
         return rule_can_move
 
-
     def move_highest_card(self, curr_game):
         """ Move (first) highest card from any pile.
         """
@@ -383,7 +371,6 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
 
     def move_highest_from_smallest(self, curr_game):
         """ Move highest card from the smallest pile.
@@ -412,7 +399,6 @@ class Strategy:
         
         return rule_can_move
         
-
     def move_highest_from_largest(self, curr_game):
         """ Move highest card from the (first) largest pile.
         """
@@ -438,7 +424,6 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
 
 
     ### -------------- Group D --------------  ###
@@ -508,7 +493,7 @@ class Strategy:
 #  Game options                                 
 # _______________________________________________________________________________________________________
 #
-# Automate testing of various strategies; defaults to False if not provided
+# Automate testing of various strategies
 # Can be used in combination
 #
 # USE_SUB_SETS    = True      # True: run games for all subsets of rule list
@@ -519,10 +504,10 @@ class Strategy:
 #
 #                             # if USE_SUB_SETS is True: permute all subsets of rule list
 #
-# NOTE: For number_of_decks = 1 and n rules:
+# For number_of_decks = 1 and n rules:
 # 
 # USE_SUB_SETS: True  -> n games
 # PERMUTE: True       -> n! games
-# Both: True          -> n! + (n-1)! + (n-2)! + ... + 1 games (8 rules runs 45 512 games)
+# Both: True          -> n! + (n-1)! + (n-2)! + ... + 1 games (e.g. 8 rules runs 45 512 games)
 #
 

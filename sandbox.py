@@ -4,9 +4,10 @@ import winsound
 import numpy as np
 import matplotlib.pyplot as plt
 
-db_name = 'aces_up_production.sqlite'
+# db_name = 'aces_up_production.sqlite'
+db_name = 'aces_up_test.sqlite'
 
-### Databse info
+### Database info
 
 # db_info = database.get_db_info(db_name, 'n_batches', 'batch_ids')
 # n_batches = db_info['n_batches']
@@ -41,7 +42,7 @@ db_name = 'aces_up_production.sqlite'
 # sort_by = 'solutions'
 # sort_by = 'decks'
 # sort_by = 'odds'
-# min_n_decks = 100000
+# min_n_decks = 1
 # odds_list = database.get_strategy_stats_list(db_name, sort_by, min_n_decks)
 # print('\n----------------------------------------------------------------------------')
 # print('{:<12s}{:<34s}{:>12s}{:>12s}'.format("Odds","Strategy","Decks","Solutions"))
@@ -57,10 +58,6 @@ db_name = 'aces_up_production.sqlite'
 ### Stats for given strategy
 
 # curr_strategy = [2,20,10,1000,1,100,200]
-# curr_strategy = [1,2,10,20,100,200,1000]
-# curr_strategy = [2,10,20,1000,1,100,200]
-# curr_strategy = [1,1000]
-# curr_strategy = 1
 # n_solutions, n_decks, odds = database.get_strategy_stats(db_name, curr_strategy)
 # print('\n')
 # print(f'Strategy {curr_strategy} has {n_solutions} solutions using {n_decks} decks.')
@@ -69,10 +66,10 @@ db_name = 'aces_up_production.sqlite'
 
 
 
-#### Number of games and estimate total runtime for batch
+#### Number of games and estimated total runtime for batch
 
-# number_of_decks = 500000
-# rule_list       = [1,2,3, 10,20, 100, 1000]
+# number_of_decks = 10000
+# rule_list       = [2, 1, 100, 10, 1000]
 # PERMUTE         = False
 # USE_SUB_SETS    = False
 # n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(db_name, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS)
@@ -90,6 +87,7 @@ db_name = 'aces_up_production.sqlite'
 # print(f'Average runtime: {1000 * database.get_avg_runtime(db_name):0.3f} ms')
 # print('\n')
 # helpers.plot_avg_runtimes(db_name)
+
 
 
 #### Get solution rule counts from DB

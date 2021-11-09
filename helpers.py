@@ -33,24 +33,26 @@ def get_batch_estimates(db_name, number_of_decks, rule_list, PERMUTE, USE_SUB_SE
     return n_games, runtime_sec, runtime_str
 
 def plot_avg_runtimes(db_name):
-    """ Plot average runtimes and best linear fit.
+    """ Average runtimes vs cumulative numbers of decks.
+        Linear regression plotted.
     """
 
-    db_info = database.get_db_info(db_name, 'batch_ids')
-    batch_ids = db_info['batch_ids']
+    db_info = database.get_db_info(db_name, 'cum_n_decks', 'avg_runtimes')
+    cum_n_decks     = db_info['cum_n_decks']
+    avg_runtimes_ms = np.array(db_info['avg_runtimes']) * 1000
 
-    runtimes = []
-    cum_n_decks = []
-    running_val = 0
+    plt.scatter(cum_n_decks, avg_runtimes_ms, marker='x')
 
-    for batch_id in batch_ids:
-        n_decks, n_games, runtime = database.get_batch_info(db_name, batch_id)
-        running_val += n_decks
-        runtimes.append(1000*runtime/n_games)
-        cum_n_decks.append(running_val)
+    # plt.plot(np.unique(cum_n_decks), np.poly1d(np.polyfit(cum_n_decks, avg_runtimes_ms, 1))(np.unique(cum_n_decks)), color = 'k')
+    plt.plot(cum_n_decks, np.poly1d(np.polyfit(cum_n_decks, avg_runtimes_ms, 1))(cum_n_decks), color = 'k')
 
-    plt.scatter(cum_n_decks, runtimes)
-    plt.plot(np.unique(cum_n_decks), np.poly1d(np.polyfit(cum_n_decks, runtimes, 1))(np.unique(cum_n_decks)), color = 'k')
+    plt.title('Avg. runtime vs cumulative number of decks over time.')
     plt.xlabel('Cumulative number of decks')
-    plt.ylabel('Avg runtime')
+    plt.ylabel('Avg runtime (ms)')
+    lin_fit_eq = 'Linear regression:{0}'.format(np.poly1d(np.polyfit(cum_n_decks, avg_runtimes_ms, 1)))
+    props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+    left, right = plt.xlim()
+    _, top = plt.ylim()
+    plt.text((right-left)*0.1, top*0.9, lin_fit_eq, bbox=props)
+    plt.yticks(np.arange(0, max(avg_runtimes_ms), 1))
     plt.show()

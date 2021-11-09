@@ -26,7 +26,6 @@ class Game:
         self.DISCARD_INDEX = 4              # piles are numbered 0-3, with discard pile as 4
         self.JOKER = cards.Card(0,1)
 
-
     def play_game(self):
         """ Play one game.
         """
@@ -40,7 +39,6 @@ class Game:
             # if RECURSIVE: self.move_rec()
             # else:         self.run_strategy()
 
-       
     def run_strategy(self):
         """ Move cards using current strategy (list of rules).
             
@@ -66,7 +64,6 @@ class Game:
             if not card_is_moved: return
             # Break while loop if no rule in strategy can move (although a potential move using another rule is possible)
 
-
     def piles_ok(self):
         """ Return True if any empty piles and any pile has more than one card
         """
@@ -79,7 +76,6 @@ class Game:
         #         print('Empty piles:', self.empty_piles())
 
         return len(piles_with_more_cards) > 0 and len(self.empty_piles()) > 0
-
 
     def move(self, from_pile, rule_str):
         """ Move card to first empty pile and then discard all possible cards.
@@ -102,7 +98,6 @@ class Game:
             self.print_current_cards()
 
         self.discard()
-
 
     def discard(self): 
         """ Discard all possible cards.
@@ -167,7 +162,6 @@ class Game:
                 self.discard_pile.add_card(self.piles[pile_idx].pop_card())
                 if self.print_out: self.print_current_cards()
         
-
     def deal(self):
         """ Deal new card to each pile and discard all possible cards.
         """
@@ -186,7 +180,6 @@ class Game:
 
         self.discard()
         
-        
     def current_cards(self):
         """ Return last card in each pile. Return [] for each empty pile.
         """
@@ -198,7 +191,6 @@ class Game:
             curr_cards.append(self.piles[i].last_card())
         
         return curr_cards
-
 
     def print_current_cards(self):
         """ Print last card and pile size for each pile.
@@ -212,19 +204,16 @@ class Game:
             print(self.piles[i].length(), end = ' ')
         print('\r')
 
-
     def update_rule_counts(self, rule_name):
         """ Increment count for a rule move
         """
         # Increment value. Append rule if not in dictionary
         self.rule_counts[rule_name] = self.rule_counts.get(rule_name,0) + 1
 
-
     def get_rule_counts(self):
         """ Return rule counts.
         """
         return self.rule_counts
-
 
     def get_moves(self, **kwargs):
         """ Return card moves.
@@ -237,18 +226,15 @@ class Game:
         else:
             return self.moves
 
-    
     def get_largest_pile(self, my_list): # largest_idx, largest_pile
         """ Return index and list for largest pile
         """
         return (max(enumerate(my_list), key = lambda tup: len(tup[1])))
 
-       
     def get_deck(self):
         """ Return the original shuffled deck
         """
         return self.original_shuffled_deck
-
 
     def get_score(self):
         """ Return score (number of discarded cards).
@@ -256,14 +242,12 @@ class Game:
         """
         return self.discard_pile.length()
 
-
     def has_won(self):
         """ Return True if score is 48.
             Return False if score is not 48.
         """
         return self.get_score() == 48
 
-    
     def empty_piles(self):
         """ Return index for all empty piles
         """
