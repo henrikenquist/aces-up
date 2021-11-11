@@ -20,26 +20,20 @@ def get_strategies(rule_list, USE_SUB_SETS, PERMUTE):
     elif not USE_SUB_SETS and PERMUTE:      # permute rules in list
 
         strategies = permutations(rule_list, len(rule_list))
-        # https://docs.python.org/3/library/itertools.html#itertools.permutations
 
     elif USE_SUB_SETS:
        
         sub_rule_list = []
-        # print(rule_list)
-        # print(len(rule_list))
 
         for i,_ in enumerate(rule_list):
 
-            sub_rule_list = rule_list[0:i+1] # don't use append here since it updates ALL sub sets
-            # print(sub_rule_list)
+            sub_rule_list = rule_list[0:i+1] # NOTE: don't use append here since it updates ALL sub sets
 
             if PERMUTE:
                 perms = permutations(sub_rule_list, len(sub_rule_list))
                 for p in perms: strategies.append(p)
-                # print(list(strategies))
             else:
                 strategies.append(sub_rule_list) # [1,20,300] -> [ [1], [1,20], [1,20,300] ]
-                # print(map(list,strategies))
 
     return strategies
 
@@ -115,10 +109,11 @@ class Strategy:
     #     return self._str_cache
 
 
-    def get_rule_funcs(self): # TODO: use class Rules to match number with function?
+    def get_rule_funcs(self):
         """ Return move rule functions according to rule_list.
         """
         
+        # TODO: use class Rules to match number with function?
         rule_funcs = []
 
         for rule_func in self.rule_list:

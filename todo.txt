@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+aces_up.py
+-----------------------------------------------------------------------------
+- save scores for non-solution games in DB
+- option to select which deck in DB to use
+
+
+-----------------------------------------------------------------------------
+helpers.py
+-----------------------------------------------------------------------------
+- statistics methods
+- plotting methods
+
+
+
+-----------------------------------------------------------------------------
+database.py
+-----------------------------------------------------------------------------
+- convert to class
+- use AUTO INCREMENT in DB instead of adding 1 to id
+- weigh runtime according to number of games in batch
+- expand get_db_info() with further functionality; use all column names
+- get_batch_info(): use *args as in get_db_info(); use all column names
+- specify FOREIGN KEY ?
+- create method: deck_str = get.deck(options); see cards.py
+- save score distribution for non-winning games (only when PERMUTE = False)
+
+
+
+-----------------------------------------------------------------------------
+strategy.py
+-----------------------------------------------------------------------------
+- use class Rules to match number with function ?
+
+
+
+-----------------------------------------------------------------------------
+game.py
+-----------------------------------------------------------------------------
+- fix recursive version
+- handle empty piles when looking for same suit (without needing JOKERS)
+
+
+
+-----------------------------------------------------------------------------
+cards.py
+-----------------------------------------------------------------------------
+- create method: recreate_deck(deck_str)
+

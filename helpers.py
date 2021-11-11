@@ -53,6 +53,6 @@ def plot_avg_runtimes(db_name):
     props = dict(boxstyle='round', facecolor='white', alpha=0.5)
     left, right = plt.xlim()
     _, top = plt.ylim()
-    plt.text((right-left)*0.1, top*0.9, lin_fit_eq, bbox=props)
+    plt.text((right-left)*0.05, top*0.9, lin_fit_eq, bbox=props)
     plt.yticks(np.arange(0, max(avg_runtimes_ms), 1))
     plt.show()

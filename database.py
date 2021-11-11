@@ -1,8 +1,6 @@
 import sqlite3
 from collections import defaultdict
 import numpy as np
-# https://docs.python.org/3/library/sqlite3.html
-
 
 # _______________________________________________________________________________________________________
 #
@@ -13,7 +11,7 @@ def get_db_info(db_name, *args):
     """ Get database info.
         Return dictionary with input args as keys.
 
-        Input args to select info type:
+        Options (one or more; as string):
         - 'all'
         - 'n_batches'
         - 'batch_ids'
@@ -26,7 +24,7 @@ def get_db_info(db_name, *args):
 
     db_info = {'db_name': db_name}
 
-    # TODO expande with further functionality
+    # TODO expand with further functionality
     for item in args:
 
         if item == 'n_batches' or item == 'all':
@@ -51,7 +49,7 @@ def get_db_info(db_name, *args):
             avg_runtimes = []
 
             for batch_id in batch_rows:
-                _, n_games, runtime = get_batch_info(db_name, batch_id[0])
+                _, n_games, _, runtime = get_batch_info(db_name, batch_id[0])
                 avg_runtimes.append(runtime/n_games)
 
             db_info['avg_runtimes'] = avg_runtimes
@@ -65,7 +63,7 @@ def get_db_info(db_name, *args):
             running_val = 0
 
             for batch_id in batch_rows:
-                n_decks, _, _ = get_batch_info(db_name, batch_id[0])
+                n_decks, _, _, _ = get_batch_info(db_name, batch_id[0])
                 running_val += n_decks
                 cum_n_decks.append(running_val)
 
@@ -76,9 +74,10 @@ def get_db_info(db_name, *args):
     return db_info
 
 def get_batch_info(db_name, batch_id):
-    """ Return n_decks, n_games, runtime
+    """ Return n_decks, n_games, n_solutions, runtime
     """
 
+    # TODO: use *args as in get_db_info() ?
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
@@ -88,10 +87,12 @@ def get_batch_info(db_name, batch_id):
     n_games = cur.fetchone()[0]
     cur.execute('''SELECT runtime FROM batches WHERE batch_id=?''', (batch_id,))
     runtime = cur.fetchone()[0]
+    cur.execute('''SELECT COUNT(solution_id) FROM solutions WHERE batch_id=?''', (batch_id,))
+    n_solutions = cur.fetchone()[0]
 
     cur.close()
 
-    return n_decks, n_games, runtime
+    return n_decks, n_games, n_solutions, runtime
 
 def get_avg_runtime(db_name, new_decks=0):
     """ Calculate predicted average runtime.
@@ -123,7 +124,7 @@ def get_avg_runtime(db_name, new_decks=0):
     elif len(batch_ids) >= lin_reg_limit:
         # print('lin. regr. used for runtime average')
         for batch_id in batch_ids:
-            n_decks, n_games, runtime = get_batch_info(db_name, batch_id)
+            n_decks, n_games, _, runtime = get_batch_info(db_name, batch_id)
             running_val += n_decks
             runtimes.append(runtime/n_games)
             cum_n_decks.append(running_val)
@@ -139,37 +140,42 @@ def get_avg_runtime(db_name, new_decks=0):
     return avg_runtime
 
 def get_rule_counts(db_name, **kwargs):
-    """ Total number of times each rule has been used in solutions.
-        Return list sorted by count values.
+    """ Number of times each rule has been used in solutions.
+        Return list of tuples sorted by total counts.
+
+        Options (use one or none):
+        - solutions_id = [integer]
+        - deck_id = [integer]
+        - moves_id = [integer]
+        - strategy_id = [integer]
+        - batch_id    = [integer]
     """
 
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
-    complete_list = []
+    temp_list = []
     rule_counts = defaultdict(int)
-    
-    # TODO: selection options via kwargs
-    if kwargs:
-        pass
-        # for item in kwargs.items():
-            # rule counts per strategy
-            # select all solutions for strategy
-            # select all moves for these solutions
-            # if item.key == 'strategy_id': # select via combo of solution table and moves table
-            #     cur.execute('''SELECT rule_counts FROM moves INNER JOIN solutions ON solutions.moves_id = moves.moves_id''', (strategy_id, ))
-            #     pass
 
-    else:
+    if not kwargs: # get all moves in db
         cur.execute('''SELECT rule_counts FROM moves ''')
+    else:
+        for option, id in kwargs.items(): # needs to do this way although only one kwargs
+            option = 'solutions.' + option
+            query = '''SELECT moves.rule_counts
+                        FROM moves
+                        INNER JOIN solutions
+                        ON moves.moves_id = solutions.moves_id
+                        WHERE {id_col}=?'''.format(id_col=option)
+            cur.execute(query, (id,))
 
     moves = cur.fetchall()
 
     for row in range(len(moves)):
-        complete_list.extend(eval(moves[row][0]))
+        temp_list.extend(eval(moves[row][0]))
 
-    for k, v in complete_list:
-        rule_counts[k] += v
+    for rule, count in temp_list:
+        rule_counts[rule] += count
     
     rule_counts = [(k, v) for (k, v) in sorted(rule_counts.items(), key=lambda x:x[1], reverse=True)]
 
@@ -193,7 +199,7 @@ def get_strategy_stats(db_name, curr_strategy):
     if not type(curr_strategy) == int:
         rule_list   = ",".join([str(e) for _,e in enumerate(curr_strategy)]) # eg: '1,20,100'
     
-    else: # curr_strategy used as strategy_id in method call
+    else:
         cur.execute('''SELECT rule_list FROM strategies WHERE strategy_id=?''', (curr_strategy, ))
         rule_list = cur.fetchone()[0]
 
@@ -256,7 +262,6 @@ def get_strategy_stats_list(db_name, sort_by='odds', min_n_decks=100000):
 #  Validation methods                          
 # _______________________________________________________________________________________________________
 #
-# https://stackoverflow.com/questions/39793327/sqlite3-insert-if-not-exist-with-python 
 
 def is_new_deck(db_name, curr_deck):
     """ Check if deck is in database. Return is_new, deck_id, cards.
@@ -267,14 +272,13 @@ def is_new_deck(db_name, curr_deck):
     cur = conn.cursor()
 
     cards = ",".join([str(e) for _,e in enumerate(curr_deck)]) # eg: '4h,Td,9c,...'
-    # print('Cards in deck', cards)
 
     cur.execute('SELECT * FROM decks WHERE cards=? ', (cards,) ) # VALUES must be a tuple or a list
     deck_row = cur.fetchone()
 
     if deck_row == None:
         is_new = True
-        cur.execute('SELECT COUNT(*) FROM decks')
+        cur.execute('SELECT COUNT(deck_id) FROM decks')
         deck_id = cur.fetchone()[0] + 1
     else:
         is_new = False
@@ -302,7 +306,7 @@ def is_new_move_sequence(db_name, curr_moves):
 
     if move_row == None:
         is_new = True
-        cur.execute('SELECT COUNT(*) FROM moves')
+        cur.execute('SELECT COUNT(moves_id) FROM moves')
         moves_id = cur.fetchone()[0] + 1
     else:
         is_new = False
@@ -319,8 +323,6 @@ def is_new_strategy(db_name, curr_strategy):
         A strategy is defined by a unique string of rules.
     """
 
-
-
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
@@ -331,7 +333,7 @@ def is_new_strategy(db_name, curr_strategy):
 
     if strategy_row == None:
         is_new = True
-        cur.execute('SELECT COUNT(*) FROM strategies')
+        cur.execute('SELECT COUNT(strategy_id) FROM strategies')
         strategy_id = cur.fetchone()[0] + 1
     else:
         is_new = False
@@ -356,7 +358,7 @@ def is_new_solution(db_name, deck_id, moves_id):
 
     if solution_row == None:
         is_new = True
-        cur.execute('SELECT COUNT(*) FROM solutions')
+        cur.execute('''SELECT COUNT(solution_id) FROM solutions''')
         solution_id = cur.fetchone()[0] + 1
     else:
         is_new = False
@@ -448,6 +450,7 @@ def update_decks(db_name, curr_deck):
 
 def update_moves(db_name, curr_moves, rule_counts):
     """ Add move sequence for solution.
+
         A move is defined by a list: [card, from_pile, to_pile, rule_str, move_count].
     """
 
@@ -472,8 +475,6 @@ def update_strategies(db_name, curr_strategy):
 
         A strategy is defined by a unique string of rules.
     """
-
-
 
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
@@ -514,10 +515,7 @@ def update_solutions(db_name, deck_id, moves_id, strategy_id, batch_id):
 def update_batches(db_name, n_decks, rule_list, permute, sub_sets, n_games, runtime):
     """ Add batch if not in database. Return batch_id.
 
-        A batch is a set of games defined by number of decks in .
-        Useful for calculating odds (tot nr batches / tot nr solutions)
-        for a particular strategy or in general.
-        See table solutions.
+        A batch is a set of games defined by a number of decks and a set of strategies.
     """
 
     conn = sqlite3.connect(db_name)
@@ -552,15 +550,11 @@ def update_runtime(db_name, batch_id, runtime):
 # _______________________________________________________________________________________________________
 
 def create_db(db_name):
-    """ Create solutions database
+    """ Create solutions database.
     """
 
     conn = sqlite3.connect(db_name) # creates if not existing
     cur = conn.cursor()
-
-    # cur.execute(''' DROP TABLE IF EXISTS decks ''') # delete table if existing
-
-    # https://python-forum.io/thread-33533.html
 
     cur.execute('''CREATE TABLE IF NOT EXISTS decks (
                                         deck_id         INTEGER UNIQUE NOT NULL PRIMARY KEY, 
@@ -598,17 +592,18 @@ def create_db(db_name):
                                         batch_id        INTEGER
                                         )''')
 
-
     conn.commit() 
     cur.close()
 
 def delete_tables(db_name, *args):
+    """ Delete table in DB.
+    """
 
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
     for table_name in args:
-        cur.execute(' DROP TABLE IF EXISTS VALUES (?) ', table_name)
+        cur.execute(' DROP TABLE ? IF EXISTS ', (table_name,))
     
     conn.commit() 
     cur.close()

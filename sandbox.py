@@ -16,6 +16,17 @@ db_name = 'aces_up_test.sqlite'
 # print(batch_ids)
 
 
+### Rule counts
+### Can be used to check if all rules in strategy have been evaluated.
+
+# rule_counts = database.get_rule_counts(db_name)
+# rule_counts = database.get_rule_counts(db_name, batch_id=4)
+# rule_counts = database.get_rule_counts(db_name, moves_id=1)
+# rule_counts = database.get_rule_counts(db_name, strategy_id=1)
+# pprint.pprint(rule_counts)
+
+
+
 ### Batches info
 
 # db_info = database.get_db_info(db_name, 'batch_ids')
@@ -27,7 +38,7 @@ db_name = 'aces_up_test.sqlite'
 # print('{:<10s}{:>12s}{:>12s}{:>12s}{:>15s}{:>12s}'.format("batch_id","n decks","n games","runtime", "avg runtime", "cum n decks"))
 # print('----------------------------------------------------------------------------\n')
 # for batch_id in batch_ids:
-#     n_decks, n_games, runtime = database.get_batch_info(db_name, batch_id)
+#     n_decks, n_games, n_solutions, runtime = database.get_batch_info(db_name, batch_id)
 #     running_val += n_decks
 #     runtimes.append(1000*runtime/n_games)
 #     cum_n_decks.append(running_val)
@@ -35,6 +46,7 @@ db_name = 'aces_up_test.sqlite'
 # print('\n----------------------------------------------------------------------------')
 # print('{:<10s}{:>12s}{:>12s}{:>12s}{:>15s}{:>12s}'.format("batch_id","n decks","n games","runtime", "avg runtime", "cum n decks"))
 # print('----------------------------------------------------------------------------\n')
+
 
 
 ### Strategy stats list

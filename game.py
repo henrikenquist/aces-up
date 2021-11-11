@@ -1,7 +1,7 @@
 import cards, pile, strategy
 from itertools import combinations
 import time
-import pprint                               # https://docs.python.org/3/library/pprint.html
+import pprint
 
 class Game:
     """ Game class.
@@ -117,7 +117,7 @@ class Game:
             curr_cards = self.current_cards() # NOTE: don't mess with this since original index is needed!
             
             # check for suit duplicates, excluding duplicates
-            # https://stackoverflow.com/questions/942543/operation-on-every-pair-of-element-in-a-list/37907649
+            
             curr_suits = [e.suit for _,e in enumerate(curr_cards) if e]
             duplicate_suits = [i for i,e in enumerate(curr_suits) if e in curr_suits[:i]]
 
@@ -125,7 +125,6 @@ class Game:
 
             # replace [] with JOKER since itertools.combinations can't handle []
             # NOTE: needs the if-else at the beginning of the comprehension
-            # https://stackoverflow.com/questions/4260280/if-else-in-a-list-comprehension
             curr_cards = [self.JOKER if not e else e for _,e in enumerate(curr_cards)]
 
             # Check all combinations of card comparisons (all cards in curr_cards!)
@@ -165,8 +164,6 @@ class Game:
     def deal(self):
         """ Deal new card to each pile and discard all possible cards.
         """
-        # print('Cards left', len(self.stack))
-        # print('Number of moves', len(self.moves))
         for to_pile in range(len(self.piles)):
             move_count = len(self.moves) + 1
             self.moves.append([self.stack[-1], -1, to_pile, move_count]) # -1 represents the stack
@@ -183,8 +180,7 @@ class Game:
     def current_cards(self):
         """ Return last card in each pile. Return [] for each empty pile.
         """
-        
-        # NOTE: # https://thispointer.com/how-to-create-and-initialize-a-list-of-lists-in-python/
+
         curr_cards = []
         
         for i in range(len(self.piles)):
@@ -207,6 +203,8 @@ class Game:
     def update_rule_counts(self, rule_name):
         """ Increment count for a rule move
         """
+
+        # TODO: use AUTO INCREMENT in DB instead
         # Increment value. Append rule if not in dictionary
         self.rule_counts[rule_name] = self.rule_counts.get(rule_name,0) + 1
 
@@ -226,7 +224,7 @@ class Game:
         else:
             return self.moves
 
-    def get_largest_pile(self, my_list): # largest_idx, largest_pile
+    def get_largest_pile(self, my_list):
         """ Return index and list for largest pile
         """
         return (max(enumerate(my_list), key = lambda tup: len(tup[1])))
@@ -238,7 +236,7 @@ class Game:
 
     def get_score(self):
         """ Return score (number of discarded cards).
-            48 is a win
+            48 is a win.
         """
         return self.discard_pile.length()
 
@@ -262,7 +260,6 @@ class Game:
     # def move_rec(self):
     #     ### --------------  Move: Recursive version --------------  ###
     #     ###
-    #     ### TODO recursion doesn't work
     #     ### could be because rule_moved_card is referenced, not copied
     #     ### and altered in the move rule functions messing things up
     #     ### in the backtracking

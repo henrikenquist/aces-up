@@ -99,7 +99,7 @@ DECK = [Card(rank, suit) for rank in list(Rank) for suit in list(Suit)]
 
 
 def get_stack():
-    """ Return a shuffled deck
+    """ Return a shuffled deck.
     """
 
     temp_deck = DECK[:] # copy, not reference; NOTE: includes JOKERS which are used in itertools.combinations

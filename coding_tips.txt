@@ -1,0 +1,23 @@
+
+Dictionary
+https://www.geeksforgeeks.org/python-sum-list-of-dictionaries-with-same-key/
+
+List
+https://stackoverflow.com/questions/942543/operation-on-every-pair-of-element-in-a-list/37907649
+https://stackoverflow.com/questions/4260280/if-else-in-a-list-comprehension
+https://thispointer.com/how-to-create-and-initialize-a-list-of-lists-in-python/
+
+DB
+https://docs.python.org/3/library/sqlite3.html
+https://python-forum.io/thread-33533.html
+https://stackoverflow.com/questions/39793327/sqlite3-insert-if-not-exist-with-python 
+
+Pretty-print
+https://docs.python.org/3/library/pprint.html
+
+Itertools (permutations)
+https://docs.python.org/3/library/itertools.html#itertools.permutations
+
+Time
+https://stackoverflow.com/questions/775049/how-do-i-convert-seconds-to-hours-minutes-and-seconds
+

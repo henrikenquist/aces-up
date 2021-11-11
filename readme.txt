@@ -70,7 +70,8 @@ Group B                                         NOTE: B-rules don't guarantee a 
  20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW      reveal higher card of same suit from largest pile
 
 Group C                                         
- 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW          highest card which reveals higher card of same suit; NOTE doesn't guarantee a move
+ 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW          highest card which reveals higher card of same suit;
+                                                NOTE doesn't guarantee a move
  200: HIGHEST_CARD                              highest card from any pile
  300: HIGHEST_FROM_SMALLEST                     highest card from smallest pile
  400: HIGHEST_FROM_LARGEST                      highest card from largest pile
