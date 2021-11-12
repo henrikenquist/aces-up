@@ -1,90 +1,4 @@
-import game, cards, pprint
-import enum
-from itertools import permutations
-
-# _______________________________________________________________________________________________________
-#
-# Reading methods                                
-# _______________________________________________________________________________________________________
-
-def get_strategies(rule_list, USE_SUB_SETS, PERMUTE):
-    """ Return list of strategies (list of lists or permutation objects)
-    """
-
-    strategies = [] # a list of lists
-
-    if not USE_SUB_SETS and not PERMUTE:    # just play games with given rule list
-
-        strategies.append(rule_list) 
-
-    elif not USE_SUB_SETS and PERMUTE:      # permute rules in list
-
-        strategies = permutations(rule_list, len(rule_list))
-
-    elif USE_SUB_SETS:
-       
-        sub_rule_list = []
-
-        for i,_ in enumerate(rule_list):
-
-            sub_rule_list = rule_list[0:i+1] # NOTE: don't use append here since it updates ALL sub sets
-
-            if PERMUTE:
-                perms = permutations(sub_rule_list, len(sub_rule_list))
-                for p in perms: strategies.append(p)
-            else:
-                strategies.append(sub_rule_list) # [1,20,300] -> [ [1], [1,20], [1,20,300] ]
-
-    return strategies
-
-def get_rule_str(rule_nr):
-
-    if rule_nr == 1:      rule_str = 'move_ace_from_highest_rank_sum'
-    if rule_nr == 2:      rule_str = 'move_ace_suit_below'
-    if rule_nr == 3:      rule_str = 'move_ace_from_smallest'
-    if rule_nr == 4:      rule_str = 'move_ace_from_largest'
-    if rule_nr == 5:      rule_str = 'move_first_ace'
-
-    if rule_nr == 10:     rule_str = 'move_from_smallest_has_higher_in_suit_below'
-    if rule_nr == 20:     rule_str = 'move_from_largest_has_higher_in_suit_below'
-    
-    if rule_nr == 100:    rule_str = 'move_highest_has_higher_in_suit_below'
-    if rule_nr == 200:    rule_str = 'move_highest_card'
-    if rule_nr == 300:    rule_str = 'move_highest_from_smallest'
-    if rule_nr == 400:    rule_str = 'move_highest_from_largest'
-
-    if rule_nr == 1000:   rule_str = 'move_from_highest_rank_sum'
-
-    return rule_str
-
-# _______________________________________________________________________________________________________
-#
-#  Rules class                              
-# _______________________________________________________________________________________________________
-
-class Rules(enum.Enum):
-
-    move_ace_from_highest_rank_sum = 1
-    move_ace_suit_below = 2
-    move_ace_from_smallest = 3
-    move_ace_from_largest = 4
-    move_first_ace = 5
-
-    move_from_smallest_has_higher_in_suit_below = 10
-    move_from_largest_has_higher_in_suit_below = 20
-
-    move_highest_has_higher_in_suit_below = 100
-    move_highest_card = 200
-    move_highest_from_smallest = 300
-    move_highest_from_largest = 400
-
-    move_from_highest_rank_sum = 1000
-
-
-RULE_NAMES = {
-    Rules.move_ace_from_highest_rank_sum: 'move_ace_from_highest_rank_sum',
-
-}
+import cards
 
 # _______________________________________________________________________________________________________
 #
@@ -94,9 +8,9 @@ RULE_NAMES = {
 class Strategy:
 
     def __init__(self, rule_list):
-        self.rule_list = rule_list
+        self.rule_list   = rule_list
         self._repr_cache = None
-        self._str_cache = None
+        self._str_cache  = None
 
     # def __repr__(self):
     #     if not self._repr_cache: # TODO: have to iterate over rule_list to get all rule names
@@ -108,6 +22,10 @@ class Strategy:
     #         self._str_cache = Rules[rule_number] + RULE_NAMES[rule_number]
     #     return self._str_cache
 
+    # _______________________________________________________________________________________________________
+    #
+    # Read
+    # _______________________________________________________________________________________________________
 
     def get_rule_funcs(self):
         """ Return move rule functions according to rule_list.
@@ -138,7 +56,7 @@ class Strategy:
 
     # _______________________________________________________________________________________________________
     #
-    #  Rule functions                            
+    #  Move
     # _______________________________________________________________________________________________________
 
     ### -------------- Group A --------------  ###
@@ -260,9 +178,7 @@ class Strategy:
         
         return rule_can_move
 
-
     ### -------------- Group B --------------  ###
-
 
     def move_from_smallest_has_higher_in_suit_below(self, curr_game):
         """  Move from smallest pile where card has a card of same suit below.
@@ -313,9 +229,7 @@ class Strategy:
         
         return rule_can_move
 
-
     ### -------------- Group C --------------  ###
-
 
     def move_highest_has_higher_in_suit_below(self, curr_game):
         """ Move highest card from pile where card has a card of same suit below.
@@ -420,9 +334,7 @@ class Strategy:
         
         return rule_can_move
 
-
     ### -------------- Group D --------------  ###
-
 
     def move_from_highest_rank_sum(self, curr_game):
         """ Move from pile with highest card rank sum.
@@ -449,60 +361,3 @@ class Strategy:
             curr_game.move(from_pile, rule_str)
         
         return rule_can_move
-
-
-
-# _______________________________________________________________________________________________________
-#
-#  Strategy rules                                 
-# _______________________________________________________________________________________________________
-#
-# Group A
-#  1: ACE_MAX                                     ace from pile with largest card sum;
-#  2: ACE_HAS_SUIT_BELOW                          reveal card of same suit; NOTE doesn't guarantee a move
-#  3: ACE_FROM_SMALLEST                           ace from smallest pile
-#  4: ACE_FROM_LARGEST                            ace from largest pile
-#  5: FIRST_ACE                                   ace from first pile
-#
-# Group B                                         NOTE: B-rules don't guarantee a move
-#  10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW     reveal higher card of same suit from smallest pile
-#  20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW      reveal higher card of same suit from largest pile
-#
-# Group C                                         
-#  100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW          highest card which reveals higher card of same suit; NOTE doesn't guarantee a move
-#  200: HIGHEST_CARD                              highest card from any pile
-#  300: HIGHEST_FROM_SMALLEST                     highest card from smallest pile
-#  400: HIGHEST_FROM_LARGEST                      highest card from largest pile
-#
-# Group D                                         
-#  1000: ANY_FROM_MAX_RANK_SUM                    any card from pile with largest card sum
-
-
-# NOTE: Order of rules in list only matters if PERMUTE is set to False
-# NOTE: Duplication of a rule doesn't change the strategy
-
-
-
-# _______________________________________________________________________________________________________
-#
-#  Game options                                 
-# _______________________________________________________________________________________________________
-#
-# Automate testing of various strategies
-# Can be used in combination
-#
-# USE_SUB_SETS    = True      # True: run games for all subsets of rule list
-#                             # [1,20,300] -> [ [1], [1,20], [1,20,300] ]
-# PERMUTE         = True      # True: run games for all permutations of rules in rule list
-#                             # [1,20,300] -> [ [1,20,300], [1,300,20], [300,1,20],
-#                             #                  20,1,300], [20,300,1], [300,20,1] etc ]
-#
-#                             # if USE_SUB_SETS is True: permute all subsets of rule list
-#
-# For number_of_decks = 1 and n rules:
-# 
-# USE_SUB_SETS: True  -> n games
-# PERMUTE: True       -> n! games
-# Both: True          -> n! + (n-1)! + (n-2)! + ... + 1 games (e.g. 8 rules runs 45 512 games)
-#
-

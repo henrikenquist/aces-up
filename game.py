@@ -1,7 +1,5 @@
 import cards, pile, strategy
 from itertools import combinations
-import time
-import pprint
 
 class Game:
     """ Game class.
@@ -26,7 +24,12 @@ class Game:
         self.DISCARD_INDEX = 4              # piles are numbered 0-3, with discard pile as 4
         self.JOKER = cards.Card(0,1)
 
-    def play_game(self):
+   # _______________________________________________________________________________________________________
+    #
+    #  Play
+    # _______________________________________________________________________________________________________
+
+    def play(self):
         """ Play one game.
         """
 
@@ -50,7 +53,7 @@ class Game:
         while self.piles_ok():
 
             # test all rules in strategy until one move is made
-            for i,move_rule_fcn in enumerate(self.rule_funcs):
+            for _,move_rule_fcn in enumerate(self.rule_funcs):
                 # if self.print_out: print(move_rule_fcn.__name__)
 
                 card_is_moved = move_rule_fcn(self) # self here represents curr_game; used in strategy.py as curr_game
@@ -63,19 +66,6 @@ class Game:
 
             if not card_is_moved: return
             # Break while loop if no rule in strategy can move (although a potential move using another rule is possible)
-
-    def piles_ok(self):
-        """ Return True if any empty piles and any pile has more than one card
-        """
-
-        piles_with_more_cards = [i for i,e, in enumerate(self.piles) if e.length() > 1]
-     
-        # if self.print_out: 
-        #     if any(piles_with_more_cards) and any(self.empty_piles()):
-        #         print('Possible piles:', piles_with_more_cards)
-        #         print('Empty piles:', self.empty_piles())
-
-        return len(piles_with_more_cards) > 0 and len(self.empty_piles()) > 0
 
     def move(self, from_pile, rule_str):
         """ Move card to first empty pile and then discard all possible cards.
@@ -114,7 +104,7 @@ class Game:
 
         while True: # has duplicate suit
 
-            curr_cards = self.current_cards() # NOTE: don't mess with this since original index is needed!
+            curr_cards = self.get_current_cards() # NOTE: don't mess with this since original index is needed!
             
             # check for suit duplicates, excluding duplicates
             
@@ -177,7 +167,12 @@ class Game:
 
         self.discard()
         
-    def current_cards(self):
+    # _______________________________________________________________________________________________________
+    #
+    #  Read
+    # _______________________________________________________________________________________________________
+
+    def get_current_cards(self):
         """ Return last card in each pile. Return [] for each empty pile.
         """
 
@@ -188,26 +183,6 @@ class Game:
         
         return curr_cards
 
-    def print_current_cards(self):
-        """ Print last card and pile size for each pile.
-        """
-        
-        for i in range(len(self.piles)):
-            print(self.piles[i].last_card(), end = ' ')
-        print('   Pile size:', end = ' ')
-
-        for i in range(len(self.piles)):
-            print(self.piles[i].length(), end = ' ')
-        print('\r')
-
-    def update_rule_counts(self, rule_name):
-        """ Increment count for a rule move
-        """
-
-        # TODO: use AUTO INCREMENT in DB instead
-        # Increment value. Append rule if not in dictionary
-        self.rule_counts[rule_name] = self.rule_counts.get(rule_name,0) + 1
-
     def get_rule_counts(self):
         """ Return rule counts.
         """
@@ -215,7 +190,8 @@ class Game:
 
     def get_moves(self, **kwargs):
         """ Return card moves.
-            Optional input 'excludedeals' to exclude deals.
+
+            Optional input 'excludedeals'.
         """
         if kwargs.get('excludedeals'):
             # (card, from_pile, to_pile, move_count); from_pile = -1 repr stack (a deal)
@@ -240,11 +216,23 @@ class Game:
         """
         return self.discard_pile.length()
 
-    def has_won(self):
-        """ Return True if score is 48.
-            Return False if score is not 48.
+    # _______________________________________________________________________________________________________
+    #
+    #  Validate
+    # _______________________________________________________________________________________________________
+
+    def piles_ok(self):
+        """ Return True if any empty piles and any pile has more than one card
         """
-        return self.get_score() == 48
+
+        piles_with_more_cards = [i for i,e, in enumerate(self.piles) if e.length() > 1]
+     
+        # if self.print_out: 
+        #     if any(piles_with_more_cards) and any(self.empty_piles()):
+        #         print('Possible piles:', piles_with_more_cards)
+        #         print('Empty piles:', self.empty_piles())
+
+        return len(piles_with_more_cards) > 0 and len(self.empty_piles()) > 0
 
     def empty_piles(self):
         """ Return index for all empty piles
@@ -253,32 +241,65 @@ class Game:
         # NOTE: Using (if e) or (if e.length() == []) cause problems in other methods, eg piles_ok())
     
         return [i for i,e in enumerate(self.piles) if e.length() == 0]
+    
+    def has_won(self):
+            """ Return True if score is 48.
+                Return False if score is not 48.
+            """
+            return self.get_score() == 48
 
+    # _______________________________________________________________________________________________________
+    #
+    #  Update
+    # _______________________________________________________________________________________________________
 
-    # # Recursive version
+    def update_rule_counts(self, rule_name):
+            """ Increment count for a rule move
+            """
 
-    # def move_rec(self):
-    #     ### --------------  Move: Recursive version --------------  ###
-    #     ###
-    #     ### could be because rule_moved_card is referenced, not copied
-    #     ### and altered in the move rule functions messing things up
-    #     ### in the backtracking
+            # TODO: use AUTO INCREMENT in DB instead
+            # Increment value. Append rule if not in dictionary
+            self.rule_counts[rule_name] = self.rule_counts.get(rule_name,0) + 1
 
-    #     while self.piles_ok():
-    #         for _,move_rule_fcn in enumerate(self.rule_funcs):
-    #             if not self.piles_ok(): continue
+    # _______________________________________________________________________________________________________
+    #
+    #  Output                                
+    # _______________________________________________________________________________________________________
 
-    #             self.card_is_moved = False
-    #             self.card_is_moved = move_rule_fcn()
-    #             self.nr_fcn_calls += 1
+    def print_current_cards(self):
+        """ Print last card and pile size for each pile.
+        """
+        
+        for i in range(len(self.piles)):
+            print(self.piles[i].last_card(), end = ' ')
+        print('   Pile size:', end = ' ')
 
-    #         if self.card_is_moved:
-    #             self.discard()
-    #             self.nr_fcn_moves += 1
-    #             old_piles = self.piles[:]   # copy, not reference!
-    #             self.move_rec()                 # go deeper i.e. start over with same rule from the beginning
-    #             self.piles = old_piles[:]   # backtrack: restore old state
+        for i in range(len(self.piles)):
+            print(self.piles[i].length(), end = ' ')
+        print('\r')
 
-    #     return
+    # _______________________________________________________________________________________________________
+    #
+    #  Recursive version (non-functional old version)
+    # _______________________________________________________________________________________________________
+
+    def move_rec(self):
+
+        while self.piles_ok():
+            for _,move_rule_fcn in enumerate(self.rule_funcs):
+                if not self.piles_ok(): continue
+
+                self.card_is_moved = False
+                self.card_is_moved = move_rule_fcn()
+                self.nr_fcn_calls += 1
+
+            if self.card_is_moved:
+                self.discard()
+                self.nr_fcn_moves += 1
+                old_piles = self.piles[:]   # copy, not reference!
+                self.move_rec()                 # go deeper i.e. start over with same rule from the beginning
+                self.piles = old_piles[:]   # backtrack: restore old state
+
+        return
 
     

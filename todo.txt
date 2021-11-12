@@ -16,7 +16,6 @@ helpers.py
 -----------------------------------------------------------------------------
 database.py
 -----------------------------------------------------------------------------
-- convert to class
 - use AUTO INCREMENT in DB instead of adding 1 to id
 - weigh runtime according to number of games in batch
 - expand get_db_info() with further functionality; use all column names
