@@ -200,11 +200,6 @@ class Game:
         else:
             return self.moves
 
-    def get_largest_pile(self, my_list):
-        """ Return index and list for largest pile
-        """
-        return (max(enumerate(my_list), key = lambda tup: len(tup[1])))
-
     def get_deck(self):
         """ Return the original shuffled deck
         """
@@ -302,4 +297,14 @@ class Game:
 
         return
 
-    
+
+    # _______________________________________________________________________________________________________
+    #
+    #  Remove (old code)
+    # _______________________________________________________________________________________________________    
+
+
+    def get_largest_pile(self, my_list):
+        """ Return index and list for largest pile
+        """
+        # return (max(enumerate(my_list), key = lambda tup: len(tup[1])))

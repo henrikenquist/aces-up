@@ -1,4 +1,4 @@
-import database, helpers
+import cards, database, helpers
 import pprint
 import winsound
 import numpy as np
@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 
 # db_name = 'aces_up_production.sqlite'
 db_name = 'aces_up_test.sqlite'
-
-db = database.Database(db_name)
+db      = database.Database(db_name)
 
 
 # ____________________________________________________________________________________
@@ -17,11 +16,10 @@ db = database.Database(db_name)
 
 ### Database info
 
-# db_info = db.get_db_info('n_batches', 'batch_ids')
-# n_batches = db_info['n_batches']
-# batch_ids = db_info['batch_ids']
-# print(n_batches)
-# print(batch_ids)
+# db_info = db.get_db_info('n_batches', 'batch_ids', 'cum_n_decks')
+# print(db_info)
+# print(db_info['n_batches'])
+# print(db_info['cum_n_decks'])
 
 
 # ____________________________________________________________________________________
@@ -41,6 +39,18 @@ db = database.Database(db_name)
 # pprint.pprint(dict(rule_counts).keys())
 # pprint.pprint(dict(rule_counts).values()); print('\n')
 # print(sum(dict(rule_counts).values()))
+
+
+### Get deck from DB or new stack (shuffled new deck) 
+
+# print(db.get_deck(1))
+
+# card_str = 'Kh,Ah,As,7c,6h,4s,Jc,Qh,Tc,Ts,5s,3h,Jh,Td,3s,2d,Th,9h,4h,7d,Qd,5c,5h,Kd,Jd,Js,8s,4c,5d,2h,6c,7s,Ks,Qs,9c,7h,2c,Kc,8h,9d,Ac,6s,4d,6d,Ad,9s,2s,3c,8d,3d,8c,Qc'
+# deck = cards.get_deck_from_str(card_str)
+# print(deck)
+
+# stack = cards.get_new_deck()
+# print(stack)
 
 
 # ____________________________________________________________________________________
@@ -74,7 +84,7 @@ db = database.Database(db_name)
 # print('\n')
 # print(f'Average runtime: {1000 * db.get_avg_runtime():0.3f} ms')
 # print('\n')
-# helpers.plot_avg_runtimes(db_name)
+# helpers.plot_avg_runtimes(db)
 
 
 #### Number of games and estimated total runtime for batch

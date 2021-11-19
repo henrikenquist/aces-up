@@ -1,9 +1,7 @@
-import database
-from math import factorial
 import numpy as np
 import matplotlib.pyplot as plt
+from math import factorial
 from time import strftime, gmtime
-import matplotlib.pyplot as plt
 from itertools import permutations
 
 # ____________________________________________________________________________________
@@ -72,12 +70,12 @@ def get_strategies(rule_list, USE_SUB_SETS, PERMUTE):
 # Plot
 # ____________________________________________________________________________________
 
-def plot_avg_runtimes(db_name):
+def plot_avg_runtimes(db):
     """ Average runtimes vs cumulative numbers of decks.
         Linear regression plotted.
     """
 
-    db_info = database.get_db_info(db_name, 'cum_n_decks', 'avg_runtimes')
+    db_info = db.get_db_info('cum_n_decks', 'avg_runtimes')
     cum_n_decks     = db_info['cum_n_decks']
     avg_runtimes_ms = np.array(db_info['avg_runtimes']) * 1000
 

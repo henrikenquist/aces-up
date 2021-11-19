@@ -1,10 +1,8 @@
 import game, cards, database, helpers
-from datetime import timedelta
-import time
+import re, time, pprint, winsound
 import collections, functools, operator
-import pprint
 from sys import exit
-import winsound
+from datetime import timedelta
 
 # _______________________________________________________________________________________________________
 #
@@ -14,8 +12,6 @@ import winsound
 db_name = 'aces_up_test.sqlite'
 # db_name = 'aces_up_production.sqlite'
 
-rule_list           = [2,1, 10, 100, 1000]
-n_decks             = 10000
 USE_SUB_SETS        = False
 PERMUTE             = False
 STRATEGY_PRINT_OUT  = False
@@ -23,9 +19,13 @@ GAME_PRINT_OUT      = False
 
 # TODO
 # RECURSIVE       = False
-# deck_from_db    = []
+# _______________________________________________________________________________________________________
+#
+#  Variables                      
 # _______________________________________________________________________________________________________
 
+# Database
+db = database.Database(db_name) # is created if not existing
 # Game counter
 game_count = 0
 # Batch flag
@@ -40,13 +40,29 @@ solutions_per_deck  = {}  # {deck nr: counts}
 
 # _______________________________________________________________________________________________________
 #
-#  Main program                                 
+#  User input (at runtime)
 # _______________________________________________________________________________________________________
 
-# Database
-db = database.Database(db_name) # is created if not existing
+# Strategy
+response = input('Rule list: ')
+if response:
+    rule_list = list(map(int, re.findall(r'[\d]+',response)))
+else: exit()
 
-# Calculate number of games and estimated runtime
+# Decks
+response = input('Use new decks (return) or decks from DB (input ids):  ')
+if response:
+    DECKS_FROM_DB = True
+    deck_list = list(map(int, re.findall(r'[\d]+',response)))
+    n_decks = len(deck_list)
+else:
+    DECKS_FROM_DB = False
+    n_decks = int(input('Number of decks: '))
+    if n_decks and n_decks > 0:
+        deck_list = range(1, n_decks + 1) # start counting games at 1
+    else: exit()
+
+# Number of games and estimated runtime
 n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(db, n_decks, rule_list, PERMUTE, USE_SUB_SETS)
 
 print('\n\n===========================================================')
@@ -68,11 +84,20 @@ start_time      = time.localtime()
 print('\n===========================================================')
 print(f'Start time:         {time.strftime("%H:%M:%S", start_time)}')
 
-# Main loop
-for deck_nr in range(1, n_decks + 1):   # loop over n_decks and use each deck for all strategies
-                                        # start counting games at 1, not 0 (for human reading)
+# _______________________________________________________________________________________________________
+#
+#  Main loop                                 
+# _______________________________________________________________________________________________________
+
+for deck_nr in deck_list:
+
     strategies  = helpers.get_strategies(rule_list, USE_SUB_SETS, PERMUTE)
-    deck        = cards.get_stack() # TODO: select deck from DB
+
+    if DECKS_FROM_DB:
+        deck = db.get_deck(deck_nr)
+        if not deck: continue
+    else:
+        deck = cards.get_new_deck()
         
     for curr_strategy in strategies:
 
@@ -86,6 +111,7 @@ for deck_nr in range(1, n_decks + 1):   # loop over n_decks and use each deck fo
 
         # Batch stats
         # TODO: save score_counts in DB?
+        # TODO: total_rules: use collections.Counter instead
         score_counts[curr_game.get_score()] = score_counts.get(curr_game.get_score(),0) + 1
         total_rules.append(curr_game.get_rule_counts())
         
@@ -120,14 +146,18 @@ for deck_nr in range(1, n_decks + 1):   # loop over n_decks and use each deck fo
 # Timer stop
 toc              = time.perf_counter()
 elapsed_time_str = '{:0>8}'.format(str(timedelta(seconds = round(toc - tic))))
+print(f'Stop time:          {time.strftime("%H:%M:%S", time.localtime())}')
 
 if has_saved_new_batch:
     db.update_runtime(new_batch_id, (toc - tic))
 
-print(f'Stop time:          {time.strftime("%H:%M:%S", time.localtime())}')
+if game_count == 0:
+    print(f'No games run for deck ids {deck_list}.')
+    exit()
+
 print(f'Runtime:            {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_count:0.2f} ms)')
 
-winsound.Beep(2000, 1000)
+winsound.Beep(2000, 750)
 
 # _______________________________________________________________________________________________________
 #
@@ -147,8 +177,9 @@ if has_saved_new_batch:
     print(f'Odds:               {n_decks/n_solutions:0.1f}')
 
 # Unique solutions
-print('\n===========================================================')
-print(f'Unique solutions per deck ({len(solutions_per_deck)} of {n_decks} decks)'); print('\n')
+if has_saved_new_batch:
+    print('\n===========================================================')
+    print(f'Unique solutions per deck ({len(solutions_per_deck)} of {n_decks} decks)'); print('\n')
 
 if 25 > n_solutions > 0:
     pprint.pprint(sorted(solutions_per_deck.items(), key=lambda x:x[1], reverse=True))

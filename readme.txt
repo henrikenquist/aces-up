@@ -1,4 +1,4 @@
-_______________________________________________________________________________________________
+_______________________________________________________________________________________________________
 
  Aces Up - Intro
 _______________________________________________________________________________________________________
@@ -35,13 +35,11 @@ ________________________________________________________________________________
  How to use the code
 _______________________________________________________________________________________________________
 
-Specify settings before running aces_up.py (i.e. the main program)
+Main program: aces_up.py
 
-Example:
+Default values of batch settings (in aces_up.py):
 
-db_name             = 'aces_up_production.sqlite'
-rule_list           = [1, 1000]
-number_of_decks     = 1
+db_name             = 'aces_up_test.sqlite'
 USE_SUB_SETS        = False
 PERMUTE             = False
 STRATEGY_PRINT_OUT  = False     # display overview info for each strategy while running
@@ -49,9 +47,13 @@ GAME_PRINT_OUT      = False     # display detailed info for each game while runn
 
 Note: Printouts increase runtime.
 
-sandbox.py contains boilerplate code for various tests and printouts.
+User input when running program:
+- Rule list (ex: 2 1 10 100 1000)
+- Use new decks or decks stored in database (deck ids, ex: 1 2 5).
 
-Tip: Use DB Browser or similar to inspect the database (https://sqlitebrowser.org/)
+Tips:
+- sandbox.py contains boilerplate code for various tests and printouts.
+- Use DB Browser or similar to inspect the database (https://sqlitebrowser.org/)
 
 _______________________________________________________________________________________________________
 
@@ -101,8 +103,9 @@ NOTE: Duplication of a rule doesn't change the strategy
 
 _______________________________________________________________________________________________________
 
- Game options                                 
+ Automate testing                                 
 _______________________________________________________________________________________________________
+
 
 Automate testing of various strategies. Can be used in combination.
 
@@ -121,7 +124,7 @@ PERMUTE: True       -> n! games
 Both: True          -> n! + (n-1)! + (n-2)! + ... + 1 games (e.g. 8 rules runs 45 512 games)
 
 
-______________________________________________________________________________________________________
+_______________________________________________________________________________________________________
 
  Results
 _______________________________________________________________________________________________________

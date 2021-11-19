@@ -98,7 +98,7 @@ class Card:
 DECK = [Card(rank, suit) for rank in list(Rank) for suit in list(Suit)]
 
 
-def get_stack():
+def get_new_deck():
     """ Return a shuffled deck.
     """
 
@@ -112,5 +112,19 @@ def get_stack():
 
     seed()
     shuffle(deck)
+
+    return deck
+
+def get_deck_from_str(card_str):
+    """ Convert card string to deck of Cards.
+    """
+
+    deck = []
+
+    for c in card_str.split(","):
+        rank = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'].index(c[0]) + 2
+        # rank = c[0]
+        suit = ['c', 'd', 'h', 's'].index(c[1]) + 1
+        deck.append(Card(Rank(rank), Suit(suit)))
 
     return deck
