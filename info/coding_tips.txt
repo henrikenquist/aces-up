@@ -7,6 +7,9 @@ https://stackoverflow.com/questions/942543/operation-on-every-pair-of-element-in
 https://stackoverflow.com/questions/4260280/if-else-in-a-list-comprehension
 https://thispointer.com/how-to-create-and-initialize-a-list-of-lists-in-python/
 
+Enum
+https://docs.python.org/3.11/howto/enum.html
+
 DB
 https://docs.python.org/3/library/sqlite3.html
 https://python-forum.io/thread-33533.html

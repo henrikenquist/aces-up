@@ -1,13 +1,28 @@
-import cards, database, helpers
+from src import cards, game, database, helpers
 import pprint
 import winsound
 import numpy as np
 import matplotlib.pyplot as plt
 
-# db_name = 'aces_up_production.sqlite'
-db_name = 'aces_up_test.sqlite'
-db      = database.Database(db_name)
+# Database settings
 
+## db_name = 'aces_up_production.sqlite'
+# db_name = 'aces_up_test.sqlite'
+# db      = database.Database(db_name)
+
+# ____________________________________________________________________________________
+#
+# Single game
+# ____________________________________________________________________________________
+deck = cards.get_new_deck()
+strategy = [2, 1, 20, 100, 300, 1000]
+GAME_PRINT_OUT = True
+
+my_game = game.Game(deck, strategy, GAME_PRINT_OUT)
+my_game.play()
+
+print("/n")
+print(f"Score: {my_game.score} (48 to win).")
 
 # ____________________________________________________________________________________
 #
@@ -41,7 +56,7 @@ db      = database.Database(db_name)
 # print(sum(dict(rule_counts).values()))
 
 
-### Get deck from DB or new stack (shuffled new deck) 
+### Get deck from DB or new stack (shuffled new deck)
 
 # print(db.get_deck(1))
 
@@ -111,7 +126,7 @@ db      = database.Database(db_name)
 # sort_by = 'solutions'
 # sort_by = 'decks'
 # sort_by = 'odds'
-# min_n_decks = 1
+# min_n_decks = 100_000
 # odds_list = db.get_strategy_stats_list(sort_by, min_n_decks)
 # print('\n----------------------------------------------------------------------------')
 # print('{:<12s}{:<34s}{:>12s}{:>12s}'.format("Odds","Strategy","Decks","Solutions"))
@@ -131,6 +146,3 @@ db      = database.Database(db_name)
 # print(f'Strategy {curr_strategy} has {n_solutions} solutions using {n_decks} decks.')
 # print(f'Odds: {odds:0.1f}')
 # print('\n')
-
-
-

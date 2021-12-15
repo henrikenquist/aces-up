@@ -1,5 +1,6 @@
-import enum                         # https://docs.python.org/3.11/howto/enum.html
+import enum
 from random import shuffle, seed
+
 
 class OrderedEnum(enum.Enum):
     def __ge__(self, other):
@@ -24,18 +25,21 @@ class OrderedEnum(enum.Enum):
             return self.value < other.value
         return NotImplemented
 
+
 class Suit(OrderedEnum):
     CLUBS = 1
     DIAMONDS = 2
     HEARTS = 3
     SPADES = 4
 
+
 SUIT_SHORT_NAMES = {
-    Suit.CLUBS: 'c',
-    Suit.DIAMONDS: 'd',
-    Suit.HEARTS: 'h',
-    Suit.SPADES: 's',
+    Suit.CLUBS: "c",
+    Suit.DIAMONDS: "d",
+    Suit.HEARTS: "h",
+    Suit.SPADES: "s",
 }
+
 
 class Rank(OrderedEnum):
     JOKER = 0
@@ -54,55 +58,62 @@ class Rank(OrderedEnum):
     KING = 13
     ACE = 14
 
+
 RANK_SHORT_NAMES = {
-    Rank.JOKER: '*',
-    Rank.ACE_ONE: '1',
-    Rank.TWO: '2',
-    Rank.THREE: '3',
-    Rank.FOUR: '4',
-    Rank.FIVE: '5',
-    Rank.SIX: '6',
-    Rank.SEVEN: '7',
-    Rank.EIGHT: '8',
-    Rank.NINE: '9',
-    Rank.TEN: 'T',
-    Rank.JACK: 'J',
-    Rank.QUEEN: 'Q',
-    Rank.KING: 'K',
-    Rank.ACE: 'A',
+    Rank.JOKER: "*",
+    Rank.ACE_ONE: "1",
+    Rank.TWO: "2",
+    Rank.THREE: "3",
+    Rank.FOUR: "4",
+    Rank.FIVE: "5",
+    Rank.SIX: "6",
+    Rank.SEVEN: "7",
+    Rank.EIGHT: "8",
+    Rank.NINE: "9",
+    Rank.TEN: "T",
+    Rank.JACK: "J",
+    Rank.QUEEN: "Q",
+    Rank.KING: "K",
+    Rank.ACE: "A",
 }
 
+
 class Card:
-    def __init__(self, rank, suit):
+    def __init__(self, rank: Rank, suit: Suit):
         self.rank = rank
         self.suit = suit
         self._repr_cache = None
         self._str_cache = None
-    
+
     def __repr__(self):
         if not self._repr_cache:
             # self._repr_cache = 'Card({}, {})'.format(self.rank, self.suit)
-            self._repr_cache = RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
+            self._repr_cache = (
+                RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
+            )
         return self._repr_cache
 
     def __str__(self):
         if not self._str_cache:
-            self._str_cache = RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
+            self._str_cache = (
+                RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
+            )
         return self._str_cache
 
     def beats(self, other):
-        """ Check if Card and other have same Suit and Card has higher Rank
-        """
+        """Check if Card and other have same Suit and Card has higher Rank"""
         return self.suit == other.suit and self.rank > other.rank
+
 
 DECK = [Card(rank, suit) for rank in list(Rank) for suit in list(Suit)]
 
 
-def get_new_deck():
-    """ Return a shuffled deck.
-    """
+def get_new_deck() -> list[Card]:
+    """Return a shuffled deck."""
 
-    temp_deck = DECK[:] # copy, not reference; NOTE: includes JOKERS which are used in itertools.combinations
+    temp_deck = DECK[
+        :
+    ]  # copy, not reference; NOTE: includes JOKERS which are used in itertools.combinations
 
     # remove JOKER and ACE_ONE
     deck = []
@@ -115,16 +126,30 @@ def get_new_deck():
 
     return deck
 
-def get_deck_from_str(card_str):
-    """ Convert card string to deck of Cards.
-    """
+
+def get_deck_from_str(card_str: str) -> list[Card]:
+    """Convert card string to deck of Cards."""
 
     deck = []
 
     for c in card_str.split(","):
-        rank = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'].index(c[0]) + 2
+        rank = [
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "T",
+            "J",
+            "Q",
+            "K",
+            "A",
+        ].index(c[0]) + 2
         # rank = c[0]
-        suit = ['c', 'd', 'h', 's'].index(c[1]) + 1
+        suit = ["c", "d", "h", "s"].index(c[1]) + 1
         deck.append(Card(Rank(rank), Suit(suit)))
 
     return deck
