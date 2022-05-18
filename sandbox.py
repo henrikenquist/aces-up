@@ -7,22 +7,23 @@ import matplotlib.pyplot as plt
 # Database settings
 
 ## db_name = 'aces_up_production.sqlite'
-# db_name = 'aces_up_test.sqlite'
-# db      = database.Database(db_name)
+db_name = 'aces_up_test.sqlite'
+db      = database.Database(db_name)
 
 # ____________________________________________________________________________________
 #
 # Single game
 # ____________________________________________________________________________________
-deck = cards.get_new_deck()
-strategy = [2, 1, 20, 100, 300, 1000]
-GAME_PRINT_OUT = True
 
-my_game = game.Game(deck, strategy, GAME_PRINT_OUT)
-my_game.play()
+# deck = cards.get_new_deck()
+# strategy = [2, 1, 20, 100, 300, 1000]
+# GAME_PRINT_OUT = True
 
-print("/n")
-print(f"Score: {my_game.score} (48 to win).")
+# my_game = game.Game(deck, strategy, GAME_PRINT_OUT)
+# my_game.play()
+
+# print("/n")
+# print(f"Score: {my_game.score} (48 to win).")
 
 # ____________________________________________________________________________________
 #
@@ -30,12 +31,13 @@ print(f"Score: {my_game.score} (48 to win).")
 # ____________________________________________________________________________________
 
 ### Database info
-
-# db_info = db.get_db_info('n_batches', 'batch_ids', 'cum_n_decks')
-# print(db_info)
-# print(db_info['n_batches'])
-# print(db_info['cum_n_decks'])
-
+# try:
+#     db_info = db.get_db_info('n_batches', 'batch_ids', 'cum_n_decks')
+#     print(db_info)
+#     print(db_info['n_batches'])
+#     print(db_info['cum_n_decks'])
+# except database.NotFoundError as e:
+#     print(e)
 
 # ____________________________________________________________________________________
 #

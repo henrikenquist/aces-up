@@ -2,6 +2,7 @@
 general
 -----------------------------------------------------------------------------
 
+? use Set to represent the deck
 ? wrap main loop in tqdm to show progress bar in output window 
 
 -----------------------------------------------------------------------------

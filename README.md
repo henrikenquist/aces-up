@@ -146,7 +146,7 @@ NOTE:
 ## Rules
 ### Group A
  1: ACE_MAX (ace from pile with largest card sum)  
- 2: ACE_HAS_SUIT_BELOW (reveal card of same suit; NOTE doesn't guarantee a move)  
+ 2: ACE_HAS_SUIT_BELOW (reveal card of same suit; NOTE: doesn't guarantee a move)  
  3: ACE_FROM_SMALLEST (ace from smallest pile)  
  4: ACE_FROM_LARGEST (ace from largest pile)  
  5: FIRST_ACE (ace from first pile)  
@@ -154,11 +154,12 @@ NOTE:
 ### Group B
 NOTE: B-rules don't guarantee a move  
 
- 10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from smallest pile  
- 20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from largest   
+ 10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from smallest pile)  
+ 20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from largest pile)   
 
 ### Group C                                         
- 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW (highest card which reveals higher card of same suit; NOTE doesn't guarantee a move)  
+ 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW (highest card which reveals higher card of same suit;   
+ NOTE: doesn't guarantee a move)  
  200: HIGHEST_CARD (highest card from any pile)  
  300: HIGHEST_FROM_SMALLEST (highest card from smallest pile)  
  400: HIGHEST_FROM_LARGEST (highest card from largest pile)  
@@ -172,6 +173,7 @@ NOTE: B-rules don't guarantee a move
 
  
 Since the number of unique decks is 52! (~8x10<sup>67</sup>), the number of games needed for each strategy to get a good estimate of the odds is also probably quite large. I haven't done the math, but neither did Stanislaw Ulam who instead turned to John von Neumann who ran simulations on the ENIAC - and voilà! Monte Carlo simulations were born.  
+https://youtu.be/OgO1gpXSUzU?t=56  
 https://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/LA-UR-88-9068   
 
 NOTE: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.  
@@ -196,11 +198,11 @@ The following table is created using sample code in sandbox.py and a database co
 | 130.0 | 1,2,10,20,100,200,1000              |   500 000  | 3845 |
 | 131.2 | 1,2,10,100,300,1000                 |   500 000  | 3810 |
 | 132.1 | 1,2,20,100,300,1000                 |   500 000  | 3784 |
-| 132.4 | 1,2,3,4,10,20,100,200,300,400,1000  |   5000 00  | 3777 |
+| 132.4 | 1,2,3,4,10,20,100,200,300,400,1000  |   500 000  | 3777 |
 | 133.4 | 1,2,10,100,400,1000                 |   500 000  | 3748 |
 | 136.2 | 1,2,20,100,400,1000                 |   500 000  | 3672 |
 | 139.3 | 1,1000                              | 1 000 000  | 7178 |
-| 151.0 | 3,2,20,100,300,1000                 |   5000 00  | 3311 |
+| 151.0 | 3,2,20,100,300,1000                 |   500 000  | 3311 |
 | 156.6 | 3,2,10,100,300,1000                 |   500 000  | 3192 |
 | 157.5 | 3,2,20,300,1000                     |   500 000  | 3174 |
 

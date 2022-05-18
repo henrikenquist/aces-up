@@ -5,6 +5,10 @@ from collections import defaultdict
 from itertools import accumulate as acc
 
 
+class NotFoundError(Exception):
+    pass
+
+
 class Database:
     """Sqlite database.
 
@@ -74,6 +78,12 @@ class Database:
         conn.commit()
         cur.close()
 
+    # def __enter__(self):
+    #     self.conn = sqlite3.connect()
+    #     return self.conn.cursor()
+
+    # def __exit__(self, type, value, traceback):
+    #     self.conn.close()
     # _______________________________________________________________________________________________________
     #
     #  Read
@@ -92,95 +102,104 @@ class Database:
         - 'avg_runtimes'
         """
 
-        conn = sqlite3.connect(self.name)
-        cur = conn.cursor()
+        try: # mainly used as a learning example
+            conn = sqlite3.connect(self.name)
+            cur = conn.cursor()
 
-        db_info = {"self": self.name}
+            db_info = {"self": self.name}
 
-        for item in args:
+            for item in args:
 
-            if item == "n_batches" or item == "all":
-                cur.execute("""SELECT COUNT(*) FROM batches """)
-                n_batches = cur.fetchone()
-                db_info["n_batches"] = n_batches[0]
+                if item == "n_batches" or item == "all":
+                    cur.execute("""SELECT COUNT(*) FROM batches """)
+                    n_batches = cur.fetchone()
+                    db_info["n_batches"] = n_batches[0]
 
-            if item == "batch_ids" or item == "all":
-                batch_ids = []
-                cur.execute(
-                    """SELECT batch_id FROM batches ORDER BY batch_id ASC """
-                )
-                batch_rows = cur.fetchall()
+                if item == "batch_ids" or item == "all":
+                    batch_ids = []
+                    cur.execute(
+                        """SELECT batch_id FROM batches ORDER BY batch_id ASC """
+                    )
+                    batch_rows = cur.fetchall()
 
-                for batch in batch_rows:
-                    batch_ids.append(batch[0])
+                    for batch in batch_rows:
+                        batch_ids.append(batch[0])
 
-                db_info["batch_ids"] = batch_ids
+                    db_info["batch_ids"] = batch_ids
 
-            if item == "n_decks" or item == "all":
-                cur.execute(
-                    """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
-                )
-                batch_rows = cur.fetchall()
+                if item == "n_decks" or item == "all":
+                    cur.execute(
+                        """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
+                    )
+                    batch_rows = cur.fetchall()
 
-                n_decks = []
+                    n_decks = []
 
-                for batch_id in batch_rows:
-                    n, _, _, _ = self.get_batch_info(batch_id[0])
-                    n_decks.append(n)
+                    for batch_id in batch_rows:
+                        n, _, _, _ = self.get_batch_info(batch_id[0])
+                        n_decks.append(n)
 
-                db_info["n_decks"] = n_decks
+                    db_info["n_decks"] = n_decks
 
-            if item == "cum_n_decks" or item == "all":
+                if item == "cum_n_decks" or item == "all":
 
-                temp = self.get_db_info("n_decks")
-                db_info["cum_n_decks"] = list(acc(temp["n_decks"]))
+                    temp = self.get_db_info("n_decks")
+                    db_info["cum_n_decks"] = list(acc(temp["n_decks"]))
 
-            if item == "avg_runtimes" or item == "all":
-                cur.execute(
-                    """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
-                )
-                batch_rows = cur.fetchall()
+                if item == "avg_runtimes" or item == "all":
+                    cur.execute(
+                        """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
+                    )
+                    batch_rows = cur.fetchall()
 
-                avg_runtimes = []
+                    avg_runtimes = []
 
-                for batch_id in batch_rows:
-                    _, n_games, _, runtime = self.get_batch_info(batch_id[0])
-                    avg_runtimes.append(runtime / n_games)
+                    for batch_id in batch_rows:
+                        _, n_games, _, runtime = self.get_batch_info(
+                            batch_id[0]
+                        )
+                        avg_runtimes.append(runtime / n_games)
 
-                db_info["avg_runtimes"] = avg_runtimes
+                    db_info["avg_runtimes"] = avg_runtimes
 
-        cur.close()
+            return db_info
 
-        return db_info
+        except sqlite3.OperationalError as e:
+            print(e)
+            raise NotFoundError(f"Unable to open database {self.name}")
 
     def get_batch_info(self, batch_id: int) -> list:
         """Return n_decks, n_games, n_solutions, runtime"""
+        try:
+            # TODO: use *args as in get_db_info() ?
+            conn = sqlite3.connect(self.name)
+            cur = conn.cursor()
 
-        # TODO: use *args as in get_db_info() ?
-        conn = sqlite3.connect(self.name)
-        cur = conn.cursor()
+            cur.execute(
+                """SELECT n_decks FROM batches WHERE batch_id=?""", (batch_id,)
+            )
+            n_decks = cur.fetchone()[0]
+            cur.execute(
+                """SELECT n_games FROM batches WHERE batch_id=?""", (batch_id,)
+            )
+            n_games = cur.fetchone()[0]
+            cur.execute(
+                """SELECT runtime FROM batches WHERE batch_id=?""", (batch_id,)
+            )
+            runtime = cur.fetchone()[0]
+            cur.execute(
+                """SELECT COUNT(solution_id) FROM solutions WHERE batch_id=?""",
+                (batch_id,),
+            )
+            n_solutions = cur.fetchone()[0]
 
-        cur.execute(
-            """SELECT n_decks FROM batches WHERE batch_id=?""", (batch_id,)
-        )
-        n_decks = cur.fetchone()[0]
-        cur.execute(
-            """SELECT n_games FROM batches WHERE batch_id=?""", (batch_id,)
-        )
-        n_games = cur.fetchone()[0]
-        cur.execute(
-            """SELECT runtime FROM batches WHERE batch_id=?""", (batch_id,)
-        )
-        runtime = cur.fetchone()[0]
-        cur.execute(
-            """SELECT COUNT(solution_id) FROM solutions WHERE batch_id=?""",
-            (batch_id,),
-        )
-        n_solutions = cur.fetchone()[0]
+            return n_decks, n_games, n_solutions, runtime
 
-        cur.close()
-
-        return n_decks, n_games, n_solutions, runtime
+        except sqlite3.OperationalError as e:
+            print(e)
+            raise NotFoundError(f"Unable to find batch id {batch_id}")
+        finally:
+            cur.close()
 
     def get_avg_runtime(self, new_decks: int = 0) -> float:
         """Calculate predicted average runtime.
