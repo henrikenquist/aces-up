@@ -1,9 +1,13 @@
-from src import game, cards, database, helpers
-
-import re, time, pprint, winsound
-import collections, functools, operator
-from sys import exit
+import collections
+import functools
+import operator
+import pprint
+import re
+import time
+import sys
+import winsound
 from datetime import timedelta
+from src import game, cards, database, helpers
 
 # from tqdm import tqdm
 
@@ -37,6 +41,7 @@ def run(settings):
     highscore = 0
     n_solutions = 0
     best_strategy = []
+    best_deck = 0
     total_rules = []
     score_counts = {}  # {score: counts}
     solutions_per_deck = {}  # {deck nr: counts}
@@ -47,11 +52,11 @@ def run(settings):
     # ________________________________________________________________________
 
     # Strategy
-    response = input("Rule list: ")
+    response = input("Strategy/Rule list: ")
     if response:
         rule_list = list(map(int, re.findall(r"[\d]+", response)))
     else:
-        exit()
+        sys.exit()
 
     # Decks
     response = input("Use new decks (return) or decks from DB (input ids):  ")
@@ -65,7 +70,7 @@ def run(settings):
         if n_decks and n_decks > 0:
             deck_list = range(1, n_decks + 1)  # start counting games at 1
         else:
-            exit()
+            sys.exit()
 
     # Number of games and estimated runtime
     n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(
@@ -86,7 +91,7 @@ def run(settings):
 
     response = input("Continue (return) or quit (q)?  ")
     if response == "q":
-        exit()
+        sys.exit()
 
     # Timer start
     tic = time.perf_counter()
@@ -101,7 +106,6 @@ def run(settings):
 
     # for deck_nr in tqdm(deck_list, desc='Looping decks'):
     for deck_nr in deck_list:
-
         strategies = helpers.get_strategies(rule_list, USE_SUB_SETS, PERMUTE)
 
         if DECKS_FROM_DB:
@@ -113,7 +117,6 @@ def run(settings):
 
         # for curr_strategy in tqdm(strategies, desc='Looping strategies'):
         for curr_strategy in strategies:
-
             game_count += 1
 
             # Play one game
@@ -121,29 +124,20 @@ def run(settings):
             curr_game.play()
 
             if STRATEGY_PRINT_OUT:
-                print(
-                    "\n==========================================================="
-                )
-                print(
-                    f"Deck: {deck_nr}  Game: {game_count}  Strategy: {curr_strategy}"
-                )
+                print("\n===========================================================")
+                print(f"Deck: {deck_nr}  Game: {game_count}  Strategy: {curr_strategy}")
 
             # Batch stats
             # TODO: save score_counts in DB?
             # TODO: total_rules: use collections.Counter instead
-            score_counts[curr_game.score] = (
-                score_counts.get(curr_game.score, 0) + 1
-            )
+            score_counts[curr_game.score] = score_counts.get(curr_game.score, 0) + 1
             total_rules.append(curr_game.rule_counts)
 
             # Save in DB if is unique solution
             if curr_game.has_won() and db.is_unique_solution(
                 deck, curr_game.get_moves()
             ):
-
-                solutions_per_deck[deck_nr] = (
-                    solutions_per_deck.get(deck_nr, 0) + 1
-                )
+                solutions_per_deck[deck_nr] = solutions_per_deck.get(deck_nr, 0) + 1
 
                 if not has_saved_new_batch:
                     new_batch_id = db.update_batches(
@@ -172,9 +166,7 @@ def run(settings):
                 )
 
                 if GAME_PRINT_OUT:
-                    print(
-                        "-----------------------------------------------------------"
-                    )
+                    print("-----------------------------------------------------------")
                     print(f"Won game nr:    {game_count}")
                     print(f"Deck nr:        {deck_nr}")
                     print(f"Strategy:       {curr_strategy}")
@@ -207,7 +199,7 @@ def run(settings):
 
     if game_count == 0:
         print(f"No games run for deck ids {deck_list}.")
-        exit()
+        sys.exit()
 
     print(
         f"Runtime:            {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_count:0.2f} ms)"
@@ -276,8 +268,6 @@ def run(settings):
         f"Rule counts for {game_count} games ({sum(total_rule_stats.values())} moves)"
     )
     print("\n")
-    pprint.pprint(
-        sorted(total_rule_stats.items(), key=lambda x: x[1], reverse=True)
-    )
+    pprint.pprint(sorted(total_rule_stats.items(), key=lambda x: x[1], reverse=True))
 
     print("\n===========================================================\n\n")

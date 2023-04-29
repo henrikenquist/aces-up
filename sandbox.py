@@ -1,14 +1,17 @@
-from src import cards, game, database, helpers
-import pprint
-import winsound
-import numpy as np
-import matplotlib.pyplot as plt
+# Uncomment imports and code snippets you want to use
+
+# import pprint
+# import winsound
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from src import cards, game, helpers
+from src import database
 
 # Database settings
 
-## db_name = 'aces_up_production.sqlite'
-db_name = 'aces_up_test.sqlite'
-db      = database.Database(db_name)
+DBNAME = 'aces_up_test.sqlite'
+# DBNAME = 'aces_up_production.sqlite'
+db = database.Database(DBNAME)
 
 # ____________________________________________________________________________________
 #

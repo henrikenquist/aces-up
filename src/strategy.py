@@ -1,5 +1,5 @@
-from src import cards
 from typing import Callable
+from src import cards
 
 # ____________________________________________________________________________________________________
 #

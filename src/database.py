@@ -1,8 +1,8 @@
-from src import cards
 import sqlite3
-import numpy as np
-from collections import defaultdict
 from itertools import accumulate as acc
+from collections import defaultdict
+import numpy as np
+from src import cards
 
 
 class NotFoundError(Exception):
@@ -21,7 +21,6 @@ class Database:
     """
 
     def __init__(self, name: str):
-
         self.name = name
         self._repr_cache = None
         self._str_cache = None
@@ -102,14 +101,13 @@ class Database:
         - 'avg_runtimes'
         """
 
-        try: # mainly used as a learning example
+        try:  # mainly used as a learning example
             conn = sqlite3.connect(self.name)
             cur = conn.cursor()
 
             db_info = {"self": self.name}
 
             for item in args:
-
                 if item == "n_batches" or item == "all":
                     cur.execute("""SELECT COUNT(*) FROM batches """)
                     n_batches = cur.fetchone()
@@ -142,7 +140,6 @@ class Database:
                     db_info["n_decks"] = n_decks
 
                 if item == "cum_n_decks" or item == "all":
-
                     temp = self.get_db_info("n_decks")
                     db_info["cum_n_decks"] = list(acc(temp["n_decks"]))
 
@@ -155,9 +152,7 @@ class Database:
                     avg_runtimes = []
 
                     for batch_id in batch_rows:
-                        _, n_games, _, runtime = self.get_batch_info(
-                            batch_id[0]
-                        )
+                        _, n_games, _, runtime = self.get_batch_info(batch_id[0])
                         avg_runtimes.append(runtime / n_games)
 
                     db_info["avg_runtimes"] = avg_runtimes
@@ -175,17 +170,11 @@ class Database:
             conn = sqlite3.connect(self.name)
             cur = conn.cursor()
 
-            cur.execute(
-                """SELECT n_decks FROM batches WHERE batch_id=?""", (batch_id,)
-            )
+            cur.execute("""SELECT n_decks FROM batches WHERE batch_id=?""", (batch_id,))
             n_decks = cur.fetchone()[0]
-            cur.execute(
-                """SELECT n_games FROM batches WHERE batch_id=?""", (batch_id,)
-            )
+            cur.execute("""SELECT n_games FROM batches WHERE batch_id=?""", (batch_id,))
             n_games = cur.fetchone()[0]
-            cur.execute(
-                """SELECT runtime FROM batches WHERE batch_id=?""", (batch_id,)
-            )
+            cur.execute("""SELECT runtime FROM batches WHERE batch_id=?""", (batch_id,))
             runtime = cur.fetchone()[0]
             cur.execute(
                 """SELECT COUNT(solution_id) FROM solutions WHERE batch_id=?""",
@@ -274,9 +263,7 @@ class Database:
             for (
                 option,
                 id,
-            ) in (
-                kwargs.items()
-            ):  # needs to do this way although only one kwargs
+            ) in kwargs.items():  # needs to do this way although only one kwargs
                 option = "solutions." + option
                 query = """SELECT moves.rule_counts
                             FROM moves
@@ -297,9 +284,7 @@ class Database:
 
         rule_counts = [
             (k, v)
-            for (k, v) in sorted(
-                rule_counts.items(), key=lambda x: x[1], reverse=True
-            )
+            for (k, v) in sorted(rule_counts.items(), key=lambda x: x[1], reverse=True)
         ]
 
         cur.close()
@@ -549,7 +534,6 @@ class Database:
         return is_new, solution_id
 
     def is_new_batch(self, batch_id: int) -> bool:
-
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
 
@@ -569,9 +553,7 @@ class Database:
 
         return is_new, batch_id
 
-    def is_unique_solution(
-        self, curr_deck: list[cards.Card], curr_moves: list
-    ) -> bool:
+    def is_unique_solution(self, curr_deck: list[cards.Card], curr_moves: list) -> bool:
         """Check if a combination of deck and moves is a unique solution (regardless of strategy)."""
 
         is_new_d, _, _ = self.is_new_deck(curr_deck)
@@ -607,9 +589,7 @@ class Database:
         strategy_id = self._update_strategies(strategy)
 
         # Solutions
-        solution_id = self._update_solutions(
-            deck_id, moves_id, strategy_id, batch_id
-        )
+        solution_id = self._update_solutions(deck_id, moves_id, strategy_id, batch_id)
 
     def _update_decks(self, curr_deck: list[cards.Card]) -> int:
         """Add deck if not in database. Return deck_id.
