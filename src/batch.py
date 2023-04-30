@@ -52,11 +52,18 @@ def run(settings):
     # ________________________________________________________________________
 
     # Strategy
-    response = input("Strategy/Rule list: ")
+    response = input("Strategy/rule list: ")
     if response:
         rule_list = list(map(int, re.findall(r"[\d]+", response)))
     else:
         sys.exit()
+        
+    sub_sets = input("Use sub sets (y/n)? ")
+    if sub_sets == "y":
+        USE_SUB_SETS = True
+    permutation = input("Use permutations (y/n)? ")
+    if permutation == "y":
+        PERMUTE = True
 
     # Decks
     response = input("Use new decks (return) or decks from DB (input ids):  ")
@@ -205,7 +212,7 @@ def run(settings):
         f"Runtime:            {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_count:0.2f} ms)"
     )
 
-    winsound.Beep(2000, 750)
+    winsound.Beep(2000, 150)
 
     # ________________________________________________________________________
     #

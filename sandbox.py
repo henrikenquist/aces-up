@@ -9,7 +9,7 @@ from src import database
 
 # Database settings
 
-DBNAME = 'aces_up_test.sqlite'
+DBNAME = "aces_up_db.sqlite"
 # DBNAME = 'aces_up_production.sqlite'
 db = database.Database(DBNAME)
 

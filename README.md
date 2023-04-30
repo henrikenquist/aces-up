@@ -2,22 +2,23 @@
 
 - [Goal](#goal)
 - [Aces Up (the game)](#aces-up-the-game)
+- [Taxonomy](#taxonomy)
 - [Running the software](#running-the-software)
-  - [From command line](#from-command-line)
-  - [From code](#from-code)
+  - [Using project.py](#using-projectpy)
+  - [Single game using code](#single-game-using-code)
+  - [Batch of games using code](#batch-of-games-using-code)
 - [Strategy](#strategy)
   - [Evaluation order](#evaluation-order)
   - [Rules](#rules)
 - [Automate strategy generation](#automate-strategy-generation)
 - [Example results](#example-results)
-- [Tips](#tips)
 - [Requirements](#requirements)
 - [Disclaimer](#disclaimer)
 - [License](#license)
 
 # Goal
 
-To explore which strategy (combination and order of move rules) has the best odds of winning the game of Aces Up (Idiots Delight).
+To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_ (_Idiots Delight_).
 
 # Aces Up (the game)
 
@@ -47,38 +48,89 @@ have been discarded except for the four aces, thus the name of the game.
 
 Source: https://en.wikipedia.org/wiki/Aces_Up
 
+# Taxonomy
+
+- Rule:
+  - instruction on which card should be moved to empty pile
+- Strategy:
+  - an sequence of rules ordered by priority
+- Deck:
+  - a unique sequence of cards (i.e. a specific shuffled deck)
+- Game:
+  - using a deck to play _Aces Up_
+- Move:
+  - [card, from_pile, to_pile, rule, move_count]
+- Solution:
+  - a unique combination of deck and winning sequence of moves
+
 # Running the software
 
-There are two ways of running the software:
+The most simple form of playing a game consists of one deck and the default strategy (1 100 1000).
 
-1. From command line
-2. From code (e.g. your own)
+The most complex form of playing involves many decks, each of which are played using each of the auto-generated strategies, which in turn are based on your custom list of rules.
 
-You can run a single game or multiple games in the same run (a batch).
+The latter is the most fun but might challenge both your CPU-fans and your patience (wait for the beep).
 
-You can automate the generation of strategies and use these in a batch.
+### Persistence:
 
-## From command line
+- Only results from batches are stored in the database
+- Only unique solutions are stored in the database (i.e. no duplicates)
 
-CD into the root folder and run `project.py` in terminal: `> python project.py`
+### Tips
+
+- Systematically build the database over time and get more reliable odds.
+- Use [DB Browser](https://sqlitebrowser.org/) or similar to inspect the database.
+- It could be reasonable to run a batch for only one deck, especially if USE_SUB_SETS and/or PERMUTE are used to generate strategies, or if you want to store won games.
+- It is possible to run consecutive batches for one or more strategies and re-use deck(s) from previous won games (batches). By doing so, you can test new strategies for deck(s) you know can be solved. NOTE: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.
+
+### Explore the unknown
+
+If that isn't enough for you, please go ahead and adapt the code to meet your needs and expand the functionality however you like (see `sandbox.py` for sample code and license below).
+
+Feel free to [contact me](https://github.com/henrikenquist) if you have used the code and want to collaborate, share improvements or additions, or if you have statistics from more strategies or larger batches.
+
+### Other implementations of Aces Up
+
+Includes odds/proportion distribution for scores: https://github.com/jwnorman/aces-up
+
+Seems to use logic similar to strategy = [1, 1000]  
+Wins:
+
+- n decks: 4 000 000
+- proportion: 0.007057
+- odds: 141.7
+
+A recursive(?) OO-implementation: https://github.com/magnusbakken/aces-up
+
+## Using project.py
+With `project.py` you can:
+- run a single game or a batch of games
+- use new deck(s) or deck(s) from a previously won game(s) (see note below)
+- use one strategy (default or custom) or many auto-generated strategies
+- show statistics of won games (from batch runs only)
+
+Note: Only available for previous batches. You need to know the deck_id for this functionality
+
+CD into the root folder and run in terminal: `> python project.py`
 
 ```
 See README for more information.
 
 0. Quit
-1. Play a game of Aces Up (strategy: 1 100 1000)
-2. Play a game with custom strategy
-3. Play a batch of games with custom strategy
-4. Display win statistics (from batches)
+1. Play one game with custom or default strategy (1 100 1000)
+2. Test different strategies for one game (i.e. the same deck)
+3. Play a batch of games
+4. Display strategy odds (won games, from batches only)
 
 Select option number:
 
 ```
 
-Example for option 1 (single game using default strategy):
+### Example option 1 - Play one game with custom or default strategy (1 100 1000)
 
 ```
 Select option number: 1
+Select strategy ('return' for default, 'q' to quit):
 -----------------------------------------
 Dealing new cards
 Th 3s Js Tc    Pile size: 1 1 1 1
@@ -103,30 +155,29 @@ Ah beats Th
 -----------------------------------------
 (etc)
 
-Score: 31 (48 to win).
+Score: 31 (48 to win)
 ```
 
-Example for option 2 (single game using custom strategy):
+### Example option 2 - Test different strategies for one game (i.e. the same deck)
 
 ```
 Select option number: 2
 Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
+Default strategy: 1 100 1000
 
-Select strategy ('return' to exit): 100 20 3  
------------------------------------------
-Dealing new cards
-4s 6c Tc 3s    Pile size: 1 1 1 1
------------------------------------------
-4s beats 3s
-4s 6c Tc []    Pile size: 1 1 1 0
-Tc beats 6c
-4s [] Tc []    Pile size: 1 0 1 0
------------------------------------------
+Select strategy ('return' for default, 'q' to quit):
+
+Score: 39 (48 to win)
+
+Select strategy ('return' for default, 'q' to quit): 1000 5 1
+
+Score: 37 (48 to win)
+
+Select strategy ('return' for default, 'q' to quit):
 (etc)
-
-Score: 40 (48 to win).
 ```
-Example for option 3 (batch of games using custom strategy):
+
+### Example option 3a - Play a batch of games with a custom strategy
 
 ```
 Select option number: 3
@@ -208,11 +259,50 @@ Rule counts for 100 games (298 moves)
 ===========================================================
 ```
 
-## From code
+### Example option 3b - Play a batch of games with a auto-generated strategies
 
-### Single game
+```
+Select option number: 3
+Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
 
-Example:
+Strategy/rule list: 5 1 200 400 1000 
+Use sub sets (y/n)? y
+Use permutations (y/n)? y
+Use new decks (return) or decks from DB (input ids):  
+Number of decks: 1000
+
+
+===========================================================
+Rule list:          [5, 1, 200, 400, 1000]
+Use sub sets:       True
+Permute:            True
+Number of games:    153000
+Estimated runtime:  00:08:34 (515 s / 3.36 ms)
+
+
+Continue (return) or quit (q)?
+```
+
+### Example option 4 - Display strategy odds (won games, from batches only)
+
+```
+Select option number: 4
+
+----------------------------------------------------------------------------
+Odds        Strategy                                 Decks   Solutions
+----------------------------------------------------------------------------
+
+62.5        1,100,1000                                 500           8
+62.5        100,20,3                                   500           8
+125.0       1,100,200,1000                             500           4
+125.0       4,10,300,1000                              500           4
+
+----------------------------------------------------------------------------
+Odds        Strategy                                 Decks   Solutions
+----------------------------------------------------------------------------
+```
+
+## Single game using code
 
 ```
 from src import game, cards
@@ -227,42 +317,28 @@ my_game.play()
 print(f"Score: {my_game.score} (48 to win).")
 ```
 
-### Batch of games
-
-Only unique solutions are stored in the database.
-
-#### Definitions
-
-- Solution: a unique combination of deck and moves
-- Deck: a unique sequence of cards (i.e. a shuffled deck)
-- Move: [card, from_pile, to_pile, rule, move_count]
-
-#### Main program
-
-In `main.py` you find example code for running batches of games.
-
-#### Settings
+## Batch of games using code
 
 ```
-# main.py
+from src import batch
 
-db_name = 'aces_up.sqlite'
+def main():
+    db_name = "aces_up.sqlite"
 
-# Strategy generation
-USE_SUB_SETS        = False
-PERMUTE             = False
+    # Strategy generation
+    USE_SUB_SETS = False
+    PERMUTE = False
+    # Console logging
+    STRATEGY_PRINT_OUT = False
+    GAME_PRINT_OUT = False
 
-# Console logging
-STRATEGY_PRINT_OUT  = False # display overview info for each strategy at runtime
-GAME_PRINT_OUT      = False # display detailed info for each game at runtime
+    batch.run([db_name, USE_SUB_SETS, PERMUTE, STRATEGY_PRINT_OUT, GAME_PRINT_OUT])
+
+if __name__ == "__main__":
+    main()
 ```
 
-Note: Printouts increase runtime.
-
-#### User input at runtime
-
-- Strategy (eg: 2 1 10 100 1000).
-- Use new decks (number of decks) or decks stored in database (deck ids, eg: 1 2 5).
+Note: Print-outs increase runtime. Especially GAME_PRINT_OUT, which also clutters the output for batch runs.
 
 # Strategy
 
@@ -290,7 +366,7 @@ NOTE:
 
 ## Rules
 
-### Group A: Ones
+### Group A: Ace
 
 1: ACE_MAX (ace from pile with largest card sum)  
 2: ACE_HAS_SUIT_BELOW (reveal card of same suit; NOTE: doesn't guarantee a move)  
@@ -298,14 +374,14 @@ NOTE:
 4: ACE_FROM_LARGEST (ace from largest pile)  
 5: FIRST_ACE (ace from first pile)
 
-### Group B: Tens
+### Group B: Pile size
 
 NOTE: B-rules don't guarantee a move
 
 10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from smallest pile)  
 20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from largest pile)
 
-### Group C: Hundreds
+### Group C: Highest card
 
 100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW (highest card which reveals higher card of same suit;  
 NOTE: doesn't guarantee a move)  
@@ -313,16 +389,17 @@ NOTE: doesn't guarantee a move)
 300: HIGHEST_FROM_SMALLEST (highest card from smallest pile)  
 400: HIGHEST_FROM_LARGEST (highest card from largest pile)
 
-### Group D: Thousands
+### Group D: Max rank
 
 1000: ANY_FROM_MAX_RANK_SUM (any card from pile with largest card sum)
 
 # Automate strategy generation
 
-Strategies can be generated automatically from a given rule list.
+Strategies can be generated automatically from a given rule list. All these generated strategies are then used in the batch run. This is a convenient way to test multiple strategies for any given deck and see if it is possible to win that particular game at all.
 
-The two settings can be used in combination.  
-If both are True, all subsets of rule list are permuted.
+The optimal solution would be a recursive algorithm, but that is practically only possible for a very limited number of strategies due to memory restrictions.
+
+The two settings can be used in combination. If both are `True`, all subsets of rule list are permuted.
 
 ### USE_SUB_SETS
 
@@ -389,26 +466,6 @@ The following table is created using sample code in `sandbox.py` and a database 
 | 156.6 | 3,2,10,100,300,1000                | 500 000   | 3192      |
 | 157.5 | 3,2,20,300,1000                    | 500 000   | 3174      |
 
-# Tips
-
-### Sample code and database inspection
-
-- `sandbox.py` contains sample code for e.g. creating stats or reading from database.
-- Use DB Browser or similar to inspect the database (https://sqlitebrowser.org/).
-
-### Other implementations of Aces Up
-
-Includes odds/proportion distribution for scores: https://github.com/jwnorman/aces-up
-
-Seems to use strategy = [1, 1000]  
-Wins:
-
-- n decks: 4 000 000
-- proportion: 0.007057
-- odds: 141.7
-
-A recursive(?) OO-implementation: https://github.com/magnusbakken/aces-up
-
 # Requirements
 
 ### Packages
@@ -417,9 +474,9 @@ Running a single game requires no external packages.
 
 Running batches requires the packages listed in `requirements.txt`
 
-- matplotlib and dependencies (for plotting expected runtime)
-- numpy and dependencies (used for predicting runtime)
-- pytest (used by `test_project.py`)
+- `matplotlib` and dependencies (for plotting expected runtime)
+- `numpy` and dependencies (used for predicting runtime)
+- `pytest` (used by `test_project.py`)
 
 ### Write permission
 
