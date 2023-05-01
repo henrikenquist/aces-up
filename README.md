@@ -67,11 +67,15 @@ Source: https://en.wikipedia.org/wiki/Aces_Up
 | Move     | One move, defined by [card, from_pile, to_pile, rule, move_count] |
 | Solution | A unique combination of deck and winning sequence of moves        |
 
+A specific solution can result from different strategies, since the same sequence of moves can result from different sets of rules. In other words, the same cards in a deck have been moved in the same sequence.
+
+Such "duplicate" solutions are treated as one unique solution when stored in the database, but the link between each winning strategy and the solution is stored for future reference.
+
 ---
 
 # Running the software
 
-The most simple form of playing a game consists of one deck and the default strategy (1 100 1000).
+The most simple form of playing a game consists of one deck and the default strategy (rule 0, highest card).
 
 The most complex form of playing involves many decks, each of which are played using each of the auto-generated strategies, which in turn are based on your custom list of rules.
 
@@ -105,17 +109,17 @@ Tables:
 - It is possible to run consecutive batches for one or more strategies and re-use deck(s) from previous won games (batches). By doing so, you can test new strategies for deck(s) you know can be solved.
 Note: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way. Use a separate database for such experiments (which you should try, of course!).
 
-### Explore the unknown
+### Explore the unknown and reach out
 
 If that isn't enough for you, please go ahead and adapt the code to meet your needs and expand the functionality however you like (see `sandbox.py` for sample code and license below).
 
-Feel free to [contact me](https://github.com/henrikenquist) if you have used the code and want to collaborate, share improvements or additions, or if you have statistics from more strategies or larger batches.
+Feel free to [contact me](https://github.com/henrikenquist) if you have used the code and want to collaborate, share improvements or additions, report bugs, or if you have statistics from more strategies or larger batches. ...or to buy me a coffee!
 
 ### Other implementations of Aces Up
 
 Includes odds/proportion distribution for scores: https://github.com/jwnorman/aces-up
 
-Seems to use logic similar to strategy = [1, 1000]  
+Seems to use logic similar to strategy = [200, 2]  
 Wins:
 
 - n decks: 4 000 000
@@ -138,10 +142,19 @@ With `project.py` you can:
 
 CD into the root folder and run in terminal: `> python project.py`
 
+You can enter rules in almost any format:
+- 300 3 0
+- 300,3,0
+- 300-3-0
+- 300/3/0
+- [300 3 0]
+- [300,3,0]
+- ...
+
 ```
 See README for more information.
 
-1 - Play one game with custom or default strategy (1 100 1000) 
+1 - Play one game with custom or default strategy (0: highest card) 
 2 - Play different strategies for one game (i.e. the same deck)
 3 - Play a batch of games
 4 - Display strategy odds (won games, from batches only)       
@@ -151,134 +164,150 @@ q - Quit
 Select option:
 ```
 
-### Example option 1 - Play one game with custom or default strategy (1 100 1000)
+### Example option 1 - Play one game with custom or default strategy (0: highest card)
 
 ```
-Select option number: 1
-Select strategy ('return' for default, 'q' to quit):
+Select option: 1
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
+Default strategy: 0
+
+Select strategy ('return' for default, 'q' to quit): 1 2
 -----------------------------------------
 Dealing new cards
-Th 3s Js Tc    Pile size: 1 1 1 1
+2d 5s 3c 9c    Pile size: 1 1 1 1
 -----------------------------------------
-Js beats 3s
-Th [] Js Tc    Pile size: 1 0 1 1
+9c beats 3c
+2d 5s [] 9c    Pile size: 1 1 0 1
 -----------------------------------------
 Dealing new cards
-Ah As 8s 9h    Pile size: 2 1 2 2
+7c Td 8d 9s    Pile size: 2 2 1 2
 -----------------------------------------
-Ah beats 9h
-Ah As 8s Tc    Pile size: 2 1 2 1
-As beats 8s
-Ah As Js Tc    Pile size: 2 1 1 1
-As beats Js
-Ah As [] Tc    Pile size: 2 1 0 1
-CARD:   Ah
-RULE:   move_ace_from_highest_rank_sum
-Th As Ah Tc    Pile size: 1 1 1 1
-Ah beats Th
-[] As Ah Tc    Pile size: 0 1 1 1
------------------------------------------
+Td beats 8d
+7c Td [] 9s    Pile size: 2 2 0 2
+CARD:   9s
+RULE:   move_highest_from_highest_rank_sum
+7c Td 9s 9c    Pile size: 2 2 1 1
+9c beats 7c
+2d Td 9s 9c    Pile size: 1 2 1 1
+Td beats 2d
+[] Td 9s 9c    Pile size: 0 2 1 1
+CARD:   Td
+RULE:   move_highest_from_highest_rank_sum
+Td 5s 9s 9c    Pile size: 1 1 1 1
+9s beats 5s
+Td [] 9s 9c    Pile size: 1 0 1 1
+
 (etc)
 
-Score: 31 (48 to win)
+Strategy: [1, 2]
+Score: 42 (48 to win)
 ```
 
 ### Example option 2 - Test different strategies for one game (i.e. the same deck)
 
 ```
-Select option number: 2
-Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
-Default strategy: 1 100 1000
+Select option: 2
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
+Default strategy: 0
 
-Select strategy ('return' for default, 'q' to quit): 2 1
+Select strategy ('return' for default, 'q' to quit):
 
-Score: 31 (48 to win)
+Score: 45 (48 to win)
 
-Select strategy ('return' for default, 'q' to quit): 2 1000
+Select strategy ('return' for default, 'q' to quit): 2 1 0
 
-Score: 48 (48 to win)
+Score: 36 (48 to win)
+
+(etc)
 ```
 
 ### Example option 3a - Play a batch of games with a custom strategy
 
 ```
-Select option number: 3
-Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
+Select option: 3
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
 
-Strategy: 100 20 3
+Select strategy/rule list: 200 1 2
 Use sub sets (y/n)? n
 Use permutations (y/n)? n
-Use new decks ('return') or decks from DB (input ids): 
-Number of decks: 100
+Use new decks ('return') or decks from DB (input deck_ids):  
+Number of decks: 500
 
 
 ===========================================================
-Strategy:           [100, 20, 3]
+Rule list:          [200, 1, 2]
 Use sub sets:       False
 Permute:            False
-Number of games:    100
-Estimated runtime:  00:00:00 (0 s / 2.51 ms)
+Number of games:    500
+Estimated runtime:  00:00:01 (1 s / 2.52 ms)
 
 
-Continue (return) or quit (q)?
-
-===========================================================
-Start time:         15:21:56
-Stop time:          15:21:56
-Runtime:            00:00:00  (0 s / 2.90 ms)
+Continue ('return') or quit ('q')?
 
 ===========================================================
-Unique solutions:   2
-Games:              100
-Decks:              100
-Proportion:         2.00 % (0.020000)
-Odds:               50.0
+Start time:         14:25:33
+Stop time:          14:25:35
+Runtime:            00:00:01  (1 s / 2.25 ms)
 
 ===========================================================
-Unique solutions per deck (2 of 100 decks)
-
-
-[(37, 1), (59, 1)]
-
-===========================================================
-Score distribution for 100 games:
-{23: 1,
-24: 1,
-26: 3,
-27: 2,
-28: 1,
-29: 6,
-30: 5,
-31: 1,
-32: 1,
-33: 9,
-34: 4,
-35: 14,
-36: 5,
-37: 5,
-38: 6,
-39: 12,
-40: 6,
-41: 5,
-42: 6,
-44: 2,
-45: 1,
-46: 1,
-47: 1,
-48: 2}
+Unique solutions:   4
+Games:              500
+Decks:              500
+Proportion:         0.80 % (0.008000)
+Odds:               125.0
 
 ===========================================================
-Rule counts for 2 solutions (15 moves)
+Unique solutions per deck (4 of 500 decks)
 
 
-[('move_highest_has_higher_in_suit_below', 11), ('move_ace_from_smallest', 4)]
+[(7, 1), (30, 1), (165, 1), (491, 1)]
 
 ===========================================================
-Rule counts for 100 games (298 moves)
+Score distribution for 500 games:
+{18: 1,
+ 22: 2,
+ 23: 2,
+ 24: 2,
+ 25: 6,
+ 26: 7,
+ 27: 12,
+ 28: 12,
+ 29: 14,
+ 30: 18,
+ 31: 22,
+ 32: 19,
+ 33: 22,
+ 34: 28,
+ 35: 33,
+ 36: 35,
+ 37: 47,
+ 38: 32,
+ 39: 34,
+ 40: 29,
+ 41: 24,
+ 42: 29,
+ 43: 16,
+ 44: 16,
+ 45: 17,
+ 46: 12,
+ 47: 5,
+ 48: 4}
+
+===========================================================
+Rule counts for 4 solutions (28 moves)
 
 
-[('move_highest_has_higher_in_suit_below', 182),
-('move_ace_from_smallest', 116)]
+[('move_ace_from_highest_rank_sum', 14),
+ ('move_highest_from_highest_rank_sum', 10),
+ ('move_highest_has_higher_in_suit_below', 4)]
+
+===========================================================
+Rule counts for 500 games (2109 moves)
+
+
+[('move_highest_from_highest_rank_sum', 895),
+ ('move_ace_from_highest_rank_sum', 742),
+ ('move_highest_has_higher_in_suit_below', 472)]
 
 ===========================================================
 ```
@@ -286,40 +315,119 @@ Rule counts for 100 games (298 moves)
 ### Example option 3b - Play a batch of games with a auto-generated strategies
 
 ```
-Select option number: 3
-Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
+Select option: 3
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
 
-Strategy/rule list: 5 1 200 400 1000 
+Select strategy/rule list: 1 2 200
 Use sub sets (y/n)? y
 Use permutations (y/n)? y
-Use new decks ('return') or decks from DB (input ids):  
+Use new decks ('return') or decks from DB (input deck_ids):  
 Number of decks: 1000
 
 
 ===========================================================
-Rule list:          [5, 1, 200, 400, 1000]
+Rule list:          [1, 2, 200]
 Use sub sets:       True
 Permute:            True
-Number of games:    153000
-Estimated runtime:  00:08:34 (515 s / 3.36 ms)
+Number of games:    9000
+Estimated runtime:  00:00:09 (9 s / 1.00 ms)
 
 
 Continue ('return') or quit ('q')?
+
+===========================================================
+Start time:         14:38:22
+Stop time:          14:38:35
+Runtime:            00:00:13  (13 s / 1.39 ms)
+
+===========================================================
+Unique solutions:   41
+Games:              9000
+Decks:              1000
+Proportion:         4.10 % (0.041000)
+Odds:               24.4
+
+===========================================================
+Unique solutions per deck (id) for 30 of 1000 decks.
+
+
+
+===========================================================
+Score distribution for 9000 games:
+(Note: Includes potential duplicates since PERMUTE = True)
+
+
+{17: 9,
+ 18: 1,
+ 19: 18,
+ 20: 14,
+ 21: 32,
+ 22: 28,
+ 23: 22,
+ 24: 53,
+ 25: 108,
+ 26: 175,
+ 27: 267,
+ 28: 216,
+ 29: 271,
+ 30: 291,
+ 31: 384,
+ 32: 509,
+ 33: 519,
+ 34: 520,
+ 35: 623,
+ 36: 549,
+ 37: 509,
+ 38: 595,
+ 39: 583,
+ 40: 448,
+ 41: 410,
+ 42: 448,
+ 43: 414,
+ 44: 306,
+ 45: 250,
+ 46: 209,
+ 47: 109,
+ 48: 110}
+
+===========================================================
+Rule counts for 41 solutions (297 moves)
+
+
+[('move_highest_from_highest_rank_sum', 169),
+ ('move_highest_has_higher_in_suit_below', 68),
+ ('move_ace_from_highest_rank_sum', 60)]
+
+===========================================================
+Rule counts for 9000 games (35365 moves)
+
+
+[('move_highest_from_highest_rank_sum', 23148),
+ ('move_highest_has_higher_in_suit_below', 8002),
+ ('move_ace_from_highest_rank_sum', 4215)]
+
+===========================================================
 ```
 
 ### Example option 4 - Display strategy odds (won games, from batches only)
 
+Results after running "Example option 3b" batch described above using an empty database, and then running a second batch using the *random* rule (1000) as strategy. 
+
 ```
-Select option number: 4
+Select option: 4
 
 ----------------------------------------------------------------------------
 Odds        Strategy                                 Decks   Solutions
 ----------------------------------------------------------------------------
 
-62.5        1,100,1000                                 500           8
-62.5        100,20,3                                   500           8
-125.0       1,100,200,1000                             500           4
-125.0       4,10,300,1000                              500           4
+62.5        1,2                                       1000          16
+90.9        0                                         1000          11
+111.1       1000                                      1000           9
+142.9       2,1                                       1000           7
+142.9       1,200,2                                   1000           7
+200.0       200,1,2                                   1000           5
+250.0       200,2,1                                   1000           4
+500.0       1                                         1000           2
 
 ----------------------------------------------------------------------------
 Odds        Strategy                                 Decks   Solutions
@@ -332,7 +440,7 @@ Odds        Strategy                                 Decks   Solutions
 from src import game, cards
 
 deck = cards.get_new_deck()
-strategy = [1, 100, 1000]
+strategy = [1, 2, 0]
 GAME_PRINT_OUT = True
 
 my_game = game.Game(deck, strategy, GAME_PRINT_OUT)
@@ -374,66 +482,96 @@ Rules in a strategy are evaluated in order.
 
 Examples of different strategies:
 
-- strategy = 1 300
-- strategy = 300 1
+- strategy A = [1, 3]
+- strategy B = [3, 1]
 
 After a deal (and following discards), rules are evaluated from the beginning of the list. As soon as a move has been made according to a rule, trailing rules in the strategy are ignored (i.e. never evaluated) during that particular round. Thus, e.g. duplication of a rule in a strategy doesn't change the outcome of the strategy.
 
 Example:
 
-- strategy = [200, 1000]
-- rule 1000 is never reached since 200 always guarantees a move (if a move is possible).
+- strategy = [3, 300]
+- rule 300 is never reached since 3 always guarantees a move (if a move is possible).
 
 ## Rules
 
-This list of rules is by no means exhaustive. I can think of other rules I would like to include, but haven't had the time to do. Maybe you can do it and send me the code?
+The rules are implemented in `strategy.py`.
 
-One example of an additional (and in hindsight, obvious) rule concept could be:
+Rule moves card from leftmost pile if more than one card matches the rule.
 
-- move a card which the reveals the lowest possible card of the same suit (would be rules 30, 40 etc)
+Moves are only made from piles larger than one card.
 
-This rule concept would prioritize elimination of lower cards.
+| Rule         | Move ...                                         |
+| ------------ | ------------------------------------------------ |
+| Default      |                                                  |
+| 0            | ... highest card from any pile                   |
+| Highest card |                                                  |
+| 1 *          | ... highest card with card of same suit below    |
+| 2            | ... highest card from pile with largest card sum |
+| 3            | ... highest card from smallest pile              |
+| 4            | ... highest card from largest pile               |
+| Lowest card  |                                                  |
+| 10 *         | ... lowest card with card of same suit below     |
+| 20           | ... lowest card from pile with largest card sum  |
+| 30           | ... lowest card from smallest pile               |
+| 40           | ... lowest card from largest pile                |
+| Ace          |                                                  |
+| 100 *        | ... ace with card of same suit below             |
+| 200          | ... ace from pile with largest card sum          |
+| 300          | ... ace from smallest pile                       |
+| 400          | ... ace from largest pile                        |
+| Random       |                                                  |
+| 1000         | ... card from random pile                        |
+|              |                                                  |
 
-The rules are implemented in `strategy.py`. 
+\* Rules 1, 10, and 100 don't guarantee a move.
 
-| Rule         | Move ...                                            |
-| ------------ | --------------------------------------------------- |
-| Ace          |                                                     |
-| 1            | ... ace from pile with largest card sum             |
-| 2 *          | ... ace with card of same suit below                |
-| 3            | ... ace from smallest pile                          |
-| 4            | ... ace from largest pile                           |
-| 5            | ... ace from first pile                             |
-| Pile size    |                                                     |
-| 10 *         | ... from smallest pile with card of same suit below |
-| 20 *         | ... from largest pile with card of same suit below  |
-| Highest card |                                                     |
-| 100 *        | ... highest card with card of same suit below       |
-| 200          | ... highest card from any pile                      |
-| 300          | ... highest card from smallest pile                 |
-| 400          | ... highest card from largest pile                  |
-| Max rank     |                                                     |
-| 1000         | ... any card from pile with largest card sum        |
-|              |                                                     |
+### A friendly conversation
 
-\* Rules 2, 10, 20, and 100 don't guarantee a move.
+A player might say:
+> "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use the latter?"
 
+I reply:
+> "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
+
+The player is not convinced:
+> "Why would you do that? Isn't that stupid? Don't you want to win the game?"
+
+I explain:
+> "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
+> 
+> Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
+
+### Missing rules
+
+The list above is by no means exhaustive. I can think of other rules I would like to include, but haven't had the time to do. Maybe you can do it and send me the code?
+
+Some examples of additional (and in hindsight, obvious) rule concepts could be:
+
+- move the highest card which reveals the **lowest** card of the same suit
+- move the lowest card which reveals the **highest** card of the same suit
+
+This concept could prioritize elimination of lower cards better than the existing rules. The same idea goes for the other classes of rules as well.
 
 ## Recommendations
 
 I would recommend that you design your strategy based on the following principles:
 
-1. First, include one *Ace* rules somewhere. Add an extra after rule 2 if used.
-2. Then, if you use a *suit below* rule (\*), add a rule that guarantees a move later in the list.
-3. Finally, be creative but clever.
-4. Remember that rule evaluation starts with the first rule after each deal/discard.
+1. Place any *Ace* rule before any corresponding *Highest card* rule.
+3. Place any *Suit below* (\*) rule before any other corresponding rule.
+4. Add a rule that guarantees a move somewhere after *Suit below* rule (\*).
+5. Remember: rule evaluation starts with the first rule after each deal/discard.
+6. Remember: more rules in a strategy is **not** necessarily better.
+7. Finally, be creative but clever.
 
-- Good form: 2 1 10 200
-- Bad form: 2 10 100
-- Good form: 400 3
-- Bad form: 300 3
-- Really bad form: 1 2 3 10 20 300 400 1000
+Generally:
+- Good form: 1 2
+- Bad form: 2 1
+- Good form: 300 3
+- Bad form: 3 300
+- Really bad form: 0 1 2 3 4 10 20 30 40 100 200 300 400 \*
 - Best form? Well, that is what it's all about. You tell me!
+
+\* Well, it is meaningful when using `SUB_SET` and/or `PERMUTE` in batches, e.g. if you want to run a really big batch (see *Number of games* below).
 
 ---
 
@@ -470,10 +608,10 @@ For one deck and n rules:
 
 Example:
 
-- USE_SUB_SETS = True
-- PERMUTE = True
-- 8 rules
-- -> 45 512 games for each deck.
+- USE_SUB_SETS = `True`
+- PERMUTE = `True`
+- 13 rules (i.e. all implemented rules)
+- -> 6 749 977 113 [games for each deck](https://www.symbolab.com/solver/induction-calculator/solve%20for%20%5Csum_%7Bn%3D1%7D%5E%7B13%7D%20%5Cleft(n%5Cright)!?or=input).
 
 ---
 
@@ -578,6 +716,7 @@ New features
 - support for more visual, interactive, and user friendly statistics output
 - present game output graphically (e.g. display card images when playing a game)
 - re-play a previous won game at "human speed"
+- let the user set the default strategy and other settings (stored in db, text file, or cookie)
 - actually let the user play the game manually (I guess some of you just wanted that)
 - ... see you in CS50W  *wink wink*
 

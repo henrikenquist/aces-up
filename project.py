@@ -2,10 +2,11 @@ import re
 import sys
 from src import batch, cards, database, game
 
-DBNAME = "aces_up_db.sqlite"
+DBNAME = "aces_up_db.sqlite"  # WARNING: for CS50P project only
+# DBNAME = "aces_up_db_production.sqlite"
 db = database.Database(DBNAME)
-RULES = [1, 2, 3, 4, 5, 10, 20, 100, 200, 300, 400, 1000]
-DEFAULT_STRATEGY = [1, 100, 1000]
+RULES = [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400, 1000]
+DEFAULT_STRATEGY = [0]
 EXIT_CODES = ["c", "e", "n", "q", "cancel", "exit", "no", "quit"]
 
 
@@ -14,8 +15,15 @@ def main():
     while True:
         option = game_option()
         if option == 1:
-            score, _ = play_game(strategy=get_strategy())
-            print(f"\nScore: {score} (48 to win)\n")
+            print(f"Valid rules: {RULES}")
+            print("Default strategy: 0\n")
+            my_strategy = get_strategy()
+            score, _ = play_game(strategy=my_strategy)
+            print(f"\nStrategy: {my_strategy}")
+            if score == 48:
+                print("You won! Congratulations!")
+            else:
+                print(f"Score: {score} (48 to win)\n")
         elif option == 2:
             test_strategies()
         elif option == 3:
@@ -25,7 +33,7 @@ def main():
 
 
 def game_option() -> int:
-    print("1 - Play one game with custom or default strategy (1 100 1000)")
+    print("1 - Play one game with custom or default strategy")
     print("2 - Play different strategies for one game (i.e. the same deck)")
     print("3 - Play a batch of games")
     print("4 - Display strategy odds (won games, from batches only)")
@@ -62,8 +70,21 @@ def play_game(**kwargs):
     return my_game.score, deck
 
 
+def test_strategies():
+    print(f"Valid rules: {RULES}")
+    print("Default strategy: 0\n")
+    deck = cards.get_new_deck()
+    while True:
+        strategy = get_strategy()
+        if strategy is None:
+            print("\n")
+            return
+        score, _ = play_game(strategy=strategy, deck=deck, print_out=False)
+        print(f"\nScore: {score} (48 to win)\n")
+
+
 def run_batch():
-    print("Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000\n")
+    print(f"Valid rules: {RULES}\n")
     # Strategy generation
     USE_SUB_SETS = False
     PERMUTE = False
@@ -81,20 +102,9 @@ def run_batch():
     batch.run([DBNAME, USE_SUB_SETS, PERMUTE, STRATEGY_PRINT_OUT, GAME_PRINT_OUT])
 
 
-def test_strategies():
-    deck = cards.get_new_deck()
-    print("Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000")
-    print("Default strategy: 1 100 1000\n")
-    while True:
-        strategy = get_strategy()
-        if strategy is None:
-            print("\n")
-            return
-        score, _ = play_game(strategy=strategy, deck=deck, print_out=False)
-        print(f"\nScore: {score} (48 to win)\n")
-
-
 def get_strategy():
+    # print(f"Valid rules: {RULES}")
+    # print("Default strategy: 0\n")
     while True:
         response = input(
             "Select strategy ('return' for default, 'q' to quit): "

@@ -5,6 +5,7 @@ import pprint
 import re
 import time
 import sys
+
 try:
     import winsound  # windows only!
 except ModuleNotFoundError:
@@ -55,7 +56,7 @@ def run(settings):
     # ________________________________________________________________________
 
     # Strategy
-    response = input("Strategy/rule list: ")
+    response = input("Select strategy/rule list: ")
     if response:
         rule_list = list(map(int, re.findall(r"[\d]+", response)))
     else:
@@ -214,7 +215,7 @@ def run(settings):
     print(
         f"Runtime:            {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_count:0.2f} ms)"
     )
-    
+
     try:
         winsound.Beep(2000, 200)
     except ModuleNotFoundError:
@@ -243,7 +244,7 @@ def run(settings):
     if has_saved_new_batch:
         print("\n===========================================================")
         print(
-            f"Unique solutions per deck ({len(solutions_per_deck)} of {n_decks} decks)"
+            f"Unique solutions per deck (id) for {len(solutions_per_deck)} of {n_decks} decks."
         )
         print("\n")
 
@@ -260,7 +261,7 @@ def run(settings):
         print(f"Deck nr:           {best_deck}")
     print(f"Score distribution for {game_count} games:")
     if PERMUTE:
-        print("(NB: includes potential duplicates since PERMUTE = True)")
+        print("(Note: Includes potential duplicates since PERMUTE = True)")
         print("\n")
     pprint.pprint(score_counts)
 
