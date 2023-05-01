@@ -5,7 +5,10 @@ import pprint
 import re
 import time
 import sys
-import winsound
+try:
+    import winsound  # windows only!
+except ModuleNotFoundError:
+    pass
 from datetime import timedelta
 from src import game, cards, database, helpers
 
@@ -57,7 +60,7 @@ def run(settings):
         rule_list = list(map(int, re.findall(r"[\d]+", response)))
     else:
         sys.exit()
-        
+
     sub_sets = input("Use sub sets (y/n)? ")
     if sub_sets == "y":
         USE_SUB_SETS = True
@@ -66,7 +69,7 @@ def run(settings):
         PERMUTE = True
 
     # Decks
-    response = input("Use new decks (return) or decks from DB (input ids):  ")
+    response = input("Use new decks ('return') or decks from DB (input deck_ids):  ")
     if response:
         DECKS_FROM_DB = True
         deck_list = list(map(int, re.findall(r"[\d]+", response)))
@@ -96,7 +99,7 @@ def run(settings):
     )
     print("\n")
 
-    response = input("Continue (return) or quit (q)?  ")
+    response = input("Continue ('return') or quit ('q')?  ")
     if response == "q":
         sys.exit()
 
@@ -211,8 +214,11 @@ def run(settings):
     print(
         f"Runtime:            {elapsed_time_str}  ({round(toc - tic)} s / {1000*(toc - tic)/game_count:0.2f} ms)"
     )
-
-    winsound.Beep(2000, 150)
+    
+    try:
+        winsound.Beep(2000, 200)
+    except ModuleNotFoundError:
+        pass
 
     # ________________________________________________________________________
     #

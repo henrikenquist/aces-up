@@ -1,5 +1,6 @@
 from src import cards
 
+
 # TODO: convert to dataclass ?
 class Pile:
     def __init__(self, index: int):
@@ -27,30 +28,30 @@ class Pile:
 
     def __ge__(self, other):
         if self.__class__ is other.__class__:
-            return self.length >= other.length
+            return self.length() >= other.length()
         return NotImplemented
 
     def __gt__(self, other):
         if self.__class__ is other.__class__:
-            return self.length > other.length
+            return self.length() > other.length()
         return NotImplemented
 
     def __le__(self, other):
         if other is None:
             pass
         if self.__class__ is other.__class__:
-            return self.length <= other.length
+            return self.length() <= other.length()
         return NotImplemented
 
     def __lt__(self, other):
         if self.__class__ is other.__class__:
-            return self.length < other.length
+            return self.length() < other.length()
         return NotImplemented
 
-    # ________________________________________________________________________________________________
+    # _________________________________________________
     #
     #  Read
-    # ________________________________________________________________________________________________
+    # _________________________________________________
 
     def length(self) -> int:
         """Return number of cards in pile.
@@ -76,17 +77,17 @@ class Pile:
     def sum_card_ranks(self) -> int:
         """Return sum of card ranks"""
         card_sum = 0
-        for c in self.cards:
-            card_sum = card_sum + c.rank.value
+        for card_iter in self.cards:
+            card_sum = card_sum + card_iter.rank.value
 
         # print('card sum', card_sum)
 
         return card_sum
 
-    # ________________________________________________________________________________________________
+    # _________________________________________________
     #
     #  Validate
-    # ________________________________________________________________________________________________
+    # _________________________________________________
 
     def can_move(self):
         """Return True if number of cards in pile > 1.
@@ -131,14 +132,14 @@ class Pile:
         """
 
         if self.length() > 1:
-            return self.last_card >= max(current_row)
+            return self.last_card() >= max(current_row)
         else:
             return False
 
-    # ________________________________________________________________________________________________
+    # _________________________________________________
     #
     #  Update
-    # ________________________________________________________________________________________________
+    # _________________________________________________
 
     def add_card(self, card: cards.Card) -> None:
         """Append card to pile."""
@@ -154,7 +155,6 @@ class Pile:
         # else:
         #     raise Exception
 
-    # ________________________________________________________________________________________________
-    #
+    # _________________________________________________
     #  Print
-    # ________________________________________________________________________________________________
+    # _________________________________________________

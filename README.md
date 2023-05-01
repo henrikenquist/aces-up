@@ -1,8 +1,8 @@
 # Table of contents
 
-- [Goal](#goal)
+- [Aim](#aim)
 - [Aces Up (the game)](#aces-up-the-game)
-- [Taxonomy](#taxonomy)
+- [Terminology](#terminology)
 - [Running the software](#running-the-software)
   - [Using project.py](#using-projectpy)
   - [Single game using code](#single-game-using-code)
@@ -10,15 +10,21 @@
 - [Strategy](#strategy)
   - [Evaluation order](#evaluation-order)
   - [Rules](#rules)
+  - [Recommendations](#recommendations)
 - [Automate strategy generation](#automate-strategy-generation)
 - [Example results](#example-results)
 - [Requirements](#requirements)
 - [Disclaimer](#disclaimer)
+- [Regrets and refactoring](#regrets-and-refactoring)
 - [License](#license)
 
-# Goal
+---
+
+# Aim
 
 To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_ (_Idiots Delight_).
+
+---
 
 # Aces Up (the game)
 
@@ -48,20 +54,20 @@ have been discarded except for the four aces, thus the name of the game.
 
 Source: https://en.wikipedia.org/wiki/Aces_Up
 
-# Taxonomy
+---
 
-- Rule:
-  - instruction on which card should be moved to empty pile
-- Strategy:
-  - an sequence of rules ordered by priority
-- Deck:
-  - a unique sequence of cards (i.e. a specific shuffled deck)
-- Game:
-  - using a deck to play _Aces Up_
-- Move:
-  - [card, from_pile, to_pile, rule, move_count]
-- Solution:
-  - a unique combination of deck and winning sequence of moves
+# Terminology
+
+| Term     | Definition                                                        |
+| -------- | ----------------------------------------------------------------- |
+| Rule     | Instruction on which card should be moved to empty pile           |
+| Strategy | A sequence of rules ordered by priority                           |
+| Deck     | A unique sequence of cards (i.e. a specific shuffled deck)        |
+| Game     | One game _Aces Up_ using one deck and one strategy                |
+| Move     | One move, defined by [card, from_pile, to_pile, rule, move_count] |
+| Solution | A unique combination of deck and winning sequence of moves        |
+
+---
 
 # Running the software
 
@@ -69,19 +75,35 @@ The most simple form of playing a game consists of one deck and the default stra
 
 The most complex form of playing involves many decks, each of which are played using each of the auto-generated strategies, which in turn are based on your custom list of rules.
 
-The latter is the most fun but might challenge both your CPU-fans and your patience (wait for the beep).
+The latter is the most fun but might challenge both your CPU-fans and your patience (wait for the beep, Windows only).
 
-### Persistence:
+### Video demo
 
-- Only results from batches are stored in the database
-- Only unique solutions are stored in the database (i.e. no duplicates)
+You can [watch a demo](YouTube url goes here) on how to run the software.
+
+### Persistence
+
+Only information regarding won batch games are stored in the database.
+
+Tables:
+- Batches
+
+- Decks
+
+- Moves
+
+- Solutions
+
+- Strategies
 
 ### Tips
 
-- Systematically build the database over time and get more reliable odds.
+- Think through your strategies before doing anything large scale.
+- Systematically build the database over time to get more reliable odds.
 - Use [DB Browser](https://sqlitebrowser.org/) or similar to inspect the database.
 - It could be reasonable to run a batch for only one deck, especially if USE_SUB_SETS and/or PERMUTE are used to generate strategies, or if you want to store won games.
-- It is possible to run consecutive batches for one or more strategies and re-use deck(s) from previous won games (batches). By doing so, you can test new strategies for deck(s) you know can be solved. NOTE: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.
+- It is possible to run consecutive batches for one or more strategies and re-use deck(s) from previous won games (batches). By doing so, you can test new strategies for deck(s) you know can be solved.
+Note: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way. Use a separate database for such experiments (which you should try, of course!).
 
 ### Explore the unknown
 
@@ -103,27 +125,30 @@ Wins:
 A recursive(?) OO-implementation: https://github.com/magnusbakken/aces-up
 
 ## Using project.py
+
+The command line user interface in `project.py` is intended to showcase the various features of the software. Not all features are available in every game option, e.g. game and strategy print-outs are disabled in options 2 and 3 in order to avoid *"console clutter"*.
+
 With `project.py` you can:
 - run a single game or a batch of games
-- use new deck(s) or deck(s) from a previously won game(s) (see note below)
+- use new deck(s) or deck(s) from a previously won game(s) \*
 - use one strategy (default or custom) or many auto-generated strategies
 - show statistics of won games (from batch runs only)
 
-Note: Only available for previous batches. You need to know the deck_id for this functionality
+\* Only available for previous batches of won games. You need to know the deck_ids for this feature.
 
 CD into the root folder and run in terminal: `> python project.py`
 
 ```
 See README for more information.
 
-0. Quit
-1. Play one game with custom or default strategy (1 100 1000)
-2. Test different strategies for one game (i.e. the same deck)
-3. Play a batch of games
-4. Display strategy odds (won games, from batches only)
+1 - Play one game with custom or default strategy (1 100 1000) 
+2 - Play different strategies for one game (i.e. the same deck)
+3 - Play a batch of games
+4 - Display strategy odds (won games, from batches only)       
 
-Select option number:
+q - Quit
 
+Select option:
 ```
 
 ### Example option 1 - Play one game with custom or default strategy (1 100 1000)
@@ -165,16 +190,13 @@ Select option number: 2
 Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
 Default strategy: 1 100 1000
 
-Select strategy ('return' for default, 'q' to quit):
+Select strategy ('return' for default, 'q' to quit): 2 1
 
-Score: 39 (48 to win)
+Score: 31 (48 to win)
 
-Select strategy ('return' for default, 'q' to quit): 1000 5 1
+Select strategy ('return' for default, 'q' to quit): 2 1000
 
-Score: 37 (48 to win)
-
-Select strategy ('return' for default, 'q' to quit):
-(etc)
+Score: 48 (48 to win)
 ```
 
 ### Example option 3a - Play a batch of games with a custom strategy
@@ -184,7 +206,9 @@ Select option number: 3
 Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
 
 Strategy: 100 20 3
-Use new decks (return) or decks from DB (input ids):  
+Use sub sets (y/n)? n
+Use permutations (y/n)? n
+Use new decks ('return') or decks from DB (input ids): 
 Number of decks: 100
 
 
@@ -268,7 +292,7 @@ Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000
 Strategy/rule list: 5 1 200 400 1000 
 Use sub sets (y/n)? y
 Use permutations (y/n)? y
-Use new decks (return) or decks from DB (input ids):  
+Use new decks ('return') or decks from DB (input ids):  
 Number of decks: 1000
 
 
@@ -280,7 +304,7 @@ Number of games:    153000
 Estimated runtime:  00:08:34 (515 s / 3.36 ms)
 
 
-Continue (return) or quit (q)?
+Continue ('return') or quit ('q')?
 ```
 
 ### Example option 4 - Display strategy odds (won games, from batches only)
@@ -340,64 +364,84 @@ if __name__ == "__main__":
 
 Note: Print-outs increase runtime. Especially GAME_PRINT_OUT, which also clutters the output for batch runs.
 
+---
+
 # Strategy
 
 ## Evaluation order
 
-Rules in strategy are evaluated in order.
+Rules in a strategy are evaluated in order.
 
 Examples of different strategies:
 
-- strategy = [1,300]
-- strategy = [300, 1]
+- strategy = 1 300
+- strategy = 300 1
 
-After a move (and following discards), rules are evaluated from beginning of the list in the next round.  
-In other words, as soon as a move has been made according to a rule, trailing rules in the strategy are ignored (i.e. never evaluated) during that particular round.
+After a deal (and following discards), rules are evaluated from the beginning of the list. As soon as a move has been made according to a rule, trailing rules in the strategy are ignored (i.e. never evaluated) during that particular round. Thus, e.g. duplication of a rule in a strategy doesn't change the outcome of the strategy.
 
 Example:
 
 - strategy = [200, 1000]
 - rule 1000 is never reached since 200 always guarantees a move (if a move is possible).
 
-NOTE:
-
-- The order of rules in a strategy only matters if PERMUTE is set to False
-- Duplication of a rule in a strategy doesn't change the outcome of the strategy
-
 ## Rules
 
-### Group A: Ace
+This list of rules is by no means exhaustive. I can think of other rules I would like to include, but haven't had the time to do. Maybe you can do it and send me the code?
 
-1: ACE_MAX (ace from pile with largest card sum)  
-2: ACE_HAS_SUIT_BELOW (reveal card of same suit; NOTE: doesn't guarantee a move)  
-3: ACE_FROM_SMALLEST (ace from smallest pile)  
-4: ACE_FROM_LARGEST (ace from largest pile)  
-5: FIRST_ACE (ace from first pile)
+One example of an additional (and in hindsight, obvious) rule concept could be:
 
-### Group B: Pile size
+- move a card which the reveals the lowest possible card of the same suit (would be rules 30, 40 etc)
 
-NOTE: B-rules don't guarantee a move
+This rule concept would prioritize elimination of lower cards.
 
-10: FROM_SMALLEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from smallest pile)  
-20: FROM_LARGEST_HAS_HIGHER_IN_SUIT_BELOW (reveal higher card of same suit from largest pile)
+The rules are implemented in `strategy.py`. 
 
-### Group C: Highest card
+| Rule         | Move ...                                            |
+| ------------ | --------------------------------------------------- |
+| Ace          |                                                     |
+| 1            | ... ace from pile with largest card sum             |
+| 2 *          | ... ace with card of same suit below                |
+| 3            | ... ace from smallest pile                          |
+| 4            | ... ace from largest pile                           |
+| 5            | ... ace from first pile                             |
+| Pile size    |                                                     |
+| 10 *         | ... from smallest pile with card of same suit below |
+| 20 *         | ... from largest pile with card of same suit below  |
+| Highest card |                                                     |
+| 100 *        | ... highest card with card of same suit below       |
+| 200          | ... highest card from any pile                      |
+| 300          | ... highest card from smallest pile                 |
+| 400          | ... highest card from largest pile                  |
+| Max rank     |                                                     |
+| 1000         | ... any card from pile with largest card sum        |
+|              |                                                     |
 
-100: HIGHEST_HAS_HIGHER_IN_SUIT_BELOW (highest card which reveals higher card of same suit;  
-NOTE: doesn't guarantee a move)  
-200: HIGHEST_CARD (highest card from any pile)  
-300: HIGHEST_FROM_SMALLEST (highest card from smallest pile)  
-400: HIGHEST_FROM_LARGEST (highest card from largest pile)
+\* Rules 2, 10, 20, and 100 don't guarantee a move.
 
-### Group D: Max rank
 
-1000: ANY_FROM_MAX_RANK_SUM (any card from pile with largest card sum)
+## Recommendations
+
+I would recommend that you design your strategy based on the following principles:
+
+1. First, include one *Ace* rules somewhere. Add an extra after rule 2 if used.
+2. Then, if you use a *suit below* rule (\*), add a rule that guarantees a move later in the list.
+3. Finally, be creative but clever.
+4. Remember that rule evaluation starts with the first rule after each deal/discard.
+
+- Good form: 2 1 10 200
+- Bad form: 2 10 100
+- Good form: 400 3
+- Bad form: 300 3
+- Really bad form: 1 2 3 10 20 300 400 1000
+- Best form? Well, that is what it's all about. You tell me!
+
+---
 
 # Automate strategy generation
 
 Strategies can be generated automatically from a given rule list. All these generated strategies are then used in the batch run. This is a convenient way to test multiple strategies for any given deck and see if it is possible to win that particular game at all.
 
-The optimal solution would be a recursive algorithm, but that is practically only possible for a very limited number of strategies due to memory restrictions.
+The optimal solution would be a recursive algorithm, but that is practically only possible for a very limited number of rules in a strategy due to memory restrictions. At least on my crappy old laptop.
 
 The two settings can be used in combination. If both are `True`, all subsets of rule list are permuted.
 
@@ -422,6 +466,7 @@ For one deck and n rules:
 | USE_SUB_SETS = True | n                              |
 | PERMUTE = True      | n!                             |
 | Both = True         | n! + (n-1)! + (n-2)! + ... + 1 |
+|                     |                                |
 
 Example:
 
@@ -430,13 +475,17 @@ Example:
 - 8 rules
 - -> 45 512 games for each deck.
 
+---
+
 # Example results
 
-Since the number of unique decks is 52! (~8x10<sup>67</sup>), the number of games needed for each strategy to get a good estimate of the odds is also probably quite large. I haven't done the math, but neither did Stanislaw Ulam who instead turned to John von Neumann who ran simulations on the ENIAC - and voilà! Monte Carlo simulations were born.  
-https://youtu.be/OgO1gpXSUzU?t=56  
-https://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/LA-UR-88-9068
+Since the number of unique decks is 52! (~8x10<sup>67</sup>), the number of games needed for each strategy to get a good estimate of the odds is also probably quite large. I haven't done the math, but neither did Stanislaw Ulam who instead turned to John von Neumann who ran [simulations on the ENIAC](https://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/LA-UR-88-9068) - and voilà! [Monte Carlo simulations](https://youtu.be/OgO1gpXSUzU?t=56) were born.  
 
-NOTE: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.
+Note: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.
+
+Note: I would not recommend running strategies like in the example below if the purpose is to check which strategy is best (hmm, that sounds familiar), since many of the strategies have bad form. Take care when designing your strategies before running large batches!
+
+Note: All decks and moves for won games in batches are stored in the database. This means that it is possible to analyze which strategies are best. The kind of table which is shown below doesn't paint the whole picture!
 
 The following table is created using sample code in `sandbox.py` and a database containing many batch runs using a unique deck for each game, with PERMUTE and USE_SUB_SETS set to False.
 
@@ -465,29 +514,74 @@ The following table is created using sample code in `sandbox.py` and a database 
 | 151.0 | 3,2,20,100,300,1000                | 500 000   | 3311      |
 | 156.6 | 3,2,10,100,300,1000                | 500 000   | 3192      |
 | 157.5 | 3,2,20,300,1000                    | 500 000   | 3174      |
+|       |                                    |           |           |
+
+---
 
 # Requirements
 
-### Packages
+### Modules
 
-Running a single game requires no external packages.
+- Running a single game requires no additional modules.
 
-Running batches requires the packages listed in `requirements.txt`
+- Running batches requires `numpy`
+  
+Project modules are listed in `requirements.txt`.
 
-- `matplotlib` and dependencies (for plotting expected runtime)
-- `numpy` and dependencies (used for predicting runtime)
-- `pytest` (used by `test_project.py`)
+- I installed `pytest` (used by `test_project.py`) and `numpy` (used for predicting batch runtime) and got a lot of "bonus" modules.
+  
+- I also installed `matplotlib` for plotting expected runtime. This module, and its "bonus" modules are not used by `project.py`, but could be used in `sandbox.py` for various purposes.
+
+Windows users will hear a beep when a batch run is finished (using the `winsound` module). Users on other platforms will have to stare at the screen for hours to know when their mega batches are done.
+
+If you experience a `ModuleNotFoundError`, this might be why (although I wrapped the thing in try-except-blocks).
 
 ### Write permission
 
-When using batches (running and extracting statistics), a sqlite3 database is required. It is created when running the first batch and updated for consecutive batch runs. The name of the database is set in `project.py`, `main.py`, and `sandbox.py` respectively (depending on the way you choose to run the software).
+When using batches (running and extracting statistics), an sqlite database is required. It is created when running the first batch and updated for consecutive batch runs. The name of the database is set in `project.py` and `sandbox.py` respectively (depending on the way you choose to run the software).
+
+---
 
 # Disclaimer
 
-This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, and so forth - quite a mouthful.  
-Hence, it is by no means the most elegant, efficient and 'pythonic' code out there. Rather, it's a playground and hopefully an incrementally less messy learning experiment (which might be reflected in the code evolution as seen in the commits).
+This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, sqlite, git, virtual environments, VSCode, and so forth - quite a mouthful. 
+
+Hence, it is by no means the most elegant, efficient and "pythonic" code out there. Rather, it's a playground and hopefully an incrementally less messy learning experiment (which might be reflected in the code evolution as seen in the commits). One upside is that there is plenty of room for improvement!
 
 As always, the TODO-list will perservere...
+
+---
+
+# Regrets and refactoring
+
+Would I design the software the same way again? No, certainly not. Game logic is convoluted, code is overly complicated, and the overall design follows the infamous *"...but it works"* pattern. Also, I have learned things along the way, things which would have been helpful at the beginning of the project but were more akin to magic at the time.
+
+Any regrets? No, nothing that can't be fixed by refactoring!
+
+Lessons learned? First of all, I would **plan** things before starting to type. Think, then do!
+
+So, what about the future?  
+
+Refactoring
+
+- optimize the code; running large batches on an old laptop is takes time
+- use a more object-oriented approach
+- create a design which facilitates easy addition of new rules
+- make the code more "pythonic" and less verbose
+- use a database framework such as SQLAlchemy
+- delegate logging and timers to decorators
+- ... and the list goes on
+
+New features
+
+- web based user interface
+- support for more visual, interactive, and user friendly statistics output
+- present game output graphically (e.g. display card images when playing a game)
+- re-play a previous won game at "human speed"
+- actually let the user play the game manually (I guess some of you just wanted that)
+- ... see you in CS50W  *wink wink*
+
+---
 
 # License
 

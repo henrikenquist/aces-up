@@ -1,10 +1,9 @@
 from typing import Callable
 from src import cards
 
-# ____________________________________________________________________________________________________
-#
+# _________________________________________________
 #  Strategy class
-# ____________________________________________________________________________________________________
+# _________________________________________________
 
 
 class Strategy:
@@ -23,10 +22,10 @@ class Strategy:
     #         self._str_cache = Rules[rule_number] + RULE_NAMES[rule_number]
     #     return self._str_cache
 
-    # ________________________________________________________________________________________________
+    # _________________________________________________
     #
     # Read
-    # ________________________________________________________________________________________________
+    # _________________________________________________
 
     def get_rule_funcs(self) -> list[Callable]:
         """Return move rule functions according to rule_list."""
@@ -35,7 +34,6 @@ class Strategy:
         rule_funcs = []
 
         for rule_func in self.rule_list:
-
             if rule_func == 1:
                 rule_funcs.append(self.move_ace_from_highest_rank_sum)
             if rule_func == 2:
@@ -48,13 +46,9 @@ class Strategy:
                 rule_funcs.append(self.move_first_ace)
 
             if rule_func == 10:
-                rule_funcs.append(
-                    self.move_from_smallest_has_higher_in_suit_below
-                )
+                rule_funcs.append(self.move_from_smallest_has_higher_in_suit_below)
             if rule_func == 20:
-                rule_funcs.append(
-                    self.move_from_largest_has_higher_in_suit_below
-                )
+                rule_funcs.append(self.move_from_largest_has_higher_in_suit_below)
 
             if rule_func == 100:
                 rule_funcs.append(self.move_highest_has_higher_in_suit_below)
@@ -70,10 +64,10 @@ class Strategy:
 
         return rule_funcs
 
-    # ________________________________________________________________________________________________
+    # _________________________________________________
     #
     #  Move
-    # ________________________________________________________________________________________________
+    # _________________________________________________
 
     ### -------------- Group A --------------  ###
 
@@ -84,19 +78,16 @@ class Strategy:
         rule_str = "move_ace_from_highest_rank_sum"
         max_sum = 0
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-            temp_sum = temp_pile.sum_card_ranks()
+        for _, pile_iter in enumerate(curr_game.piles):
+            temp_sum = pile_iter.sum_card_ranks()
 
             if (
-                temp_pile.length() > 1
-                and temp_pile.last_is_ace()
+                pile_iter.length() > 1
+                and pile_iter.last_is_ace()
                 and temp_sum > max_sum
             ):
-
-                max_sum = temp_pile.sum_card_ranks()
-                from_pile = temp_pile
+                max_sum = pile_iter.sum_card_ranks()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -110,16 +101,13 @@ class Strategy:
         rule_can_move = False
         rule_str = "move_ace_suit_below"
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                temp_pile.length() > 1
-                and temp_pile.last_is_ace()
-                and temp_pile.has_suit_below()
+                pile_iter.length() > 1
+                and pile_iter.last_is_ace()
+                and pile_iter.has_suit_below()
             ):
-
-                from_pile = temp_pile
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -134,16 +122,10 @@ class Strategy:
         rule_str = "move_ace_from_smallest"
         min_pile_length = 100
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-            if (
-                temp_pile.last_is_ace()
-                and 1 < temp_pile.length() < min_pile_length
-            ):
-
-                min_pile_length = temp_pile.length()
-                from_pile = temp_pile
+        for _, pile_iter in enumerate(curr_game.piles):
+            if pile_iter.last_is_ace() and 1 < pile_iter.length() < min_pile_length:
+                min_pile_length = pile_iter.length()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -158,17 +140,14 @@ class Strategy:
         rule_str = "move_ace_from_largest"
         max_pile_length = 1
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                temp_pile.length() > 1
-                and temp_pile.last_is_ace()
-                and temp_pile.length() > max_pile_length
+                pile_iter.length() > 1
+                and pile_iter.last_is_ace()
+                and pile_iter.length() > max_pile_length
             ):
-
-                max_pile_length = temp_pile.length()
-                from_pile = temp_pile
+                max_pile_length = pile_iter.length()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -182,12 +161,9 @@ class Strategy:
         rule_can_move = False
         rule_str = "move_first_ace"
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-            if temp_pile.length() > 1 and temp_pile.last_is_ace():
-
-                from_pile = temp_pile
+        for _, pile_iter in enumerate(curr_game.piles):
+            if pile_iter.length() > 1 and pile_iter.last_is_ace():
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -204,18 +180,14 @@ class Strategy:
         rule_str = "move_from_smallest_has_higher_in_suit_below"
         min_pile_length = 100
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                1 < temp_pile.length() < min_pile_length
-                and temp_pile.below_is_higher()
-                and temp_pile.has_suit_below()
+                1 < pile_iter.length() < min_pile_length
+                and pile_iter.below_is_higher()
+                and pile_iter.has_suit_below()
             ):
-
-                min_pile_length = curr_game.piles[i].length()
-                from_pile = temp_pile
+                min_pile_length = pile_iter.length()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -230,17 +202,14 @@ class Strategy:
         rule_str = "move_from_largest_has_higher_in_suit_below"
         max_pile_length = 1
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                temp_pile.length() > max_pile_length
-                and temp_pile.below_is_higher()
-                and temp_pile.has_suit_below()
+                pile_iter.length() > max_pile_length
+                and pile_iter.below_is_higher()
+                and pile_iter.has_suit_below()
             ):
-
-                max_pile_length = temp_pile.length()
-                from_pile = temp_pile
+                max_pile_length = pile_iter.length()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -257,18 +226,14 @@ class Strategy:
         rule_str = "move_highest_has_higher_in_suit_below"
         max_rank = cards.Rank(0)  # JOKER
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                temp_pile.length() > 1
-                and temp_pile.last_card().rank > max_rank
-                and temp_pile.has_suit_below()
+                pile_iter.length() > 1
+                and pile_iter.last_card().rank > max_rank
+                and pile_iter.has_suit_below()
             ):
-
-                max_rank = temp_pile.last_card().rank
-                from_pile = temp_pile
+                max_rank = pile_iter.last_card().rank
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -283,14 +248,10 @@ class Strategy:
         rule_str = "move_highest_card"
         max_rank = cards.Rank(0)  # JOKER
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-
-            if temp_pile.length() > 1 and temp_pile.last_card().rank > max_rank:
-
-                max_rank = temp_pile.last_card().rank
-                from_pile = temp_pile
+        for _, pile_iter in enumerate(curr_game.piles):
+            if pile_iter.length() > 1 and pile_iter.last_card().rank > max_rank:
+                max_rank = pile_iter.last_card().rank
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -303,21 +264,20 @@ class Strategy:
 
         rule_can_move = False
         rule_str = "move_highest_from_smallest"
-        min_pile_length = 100
+        # min_pile_length = 100
+        min_pile_length = min(p.length() for p in curr_game.piles)
+        if min_pile_length < 2:
+            min_pile_length = 2
         max_rank = cards.Rank(0)  # JOKER
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                1 < temp_pile.length() <= min_pile_length
-                and temp_pile.last_card().rank > max_rank
+                1 < pile_iter.length() == min_pile_length
+                and pile_iter.last_card().rank > max_rank
             ):
-
-                min_pile_length = temp_pile.length()
-                max_rank = temp_pile.last_card().rank
-                from_pile = temp_pile
+                min_pile_length = pile_iter.length()
+                max_rank = pile_iter.last_card().rank
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -330,21 +290,16 @@ class Strategy:
 
         rule_can_move = False
         rule_str = "move_highest_from_largest"
-        max_pile_length = 1
+        max_pile_length = max(p.length() for p in curr_game.piles)
         max_rank = cards.Rank(0)  # JOKER
 
-        for i in range(len(curr_game.piles)):
-
-            temp_pile = curr_game.piles[i]
-
+        for _, pile_iter in enumerate(curr_game.piles):
             if (
-                temp_pile.length() > max_pile_length
-                and temp_pile.last_card().rank > max_rank
+                1 < pile_iter.length() == max_pile_length
+                and pile_iter.last_card().rank > max_rank
             ):
-
-                max_pile_length = temp_pile.length()
-                max_rank = temp_pile.last_card().rank
-                from_pile = temp_pile
+                max_rank = pile_iter.last_card().rank
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:
@@ -361,15 +316,12 @@ class Strategy:
         rule_str = "move_from_highest_rank_sum"
         max_sum = 0
 
-        for i in range(len(curr_game.piles)):
+        for _, pile_iter in enumerate(curr_game.piles):
+            temp_sum = pile_iter.sum_card_ranks()
 
-            temp_pile = curr_game.piles[i]
-            temp_sum = temp_pile.sum_card_ranks()
-
-            if temp_pile.length() > 1 and temp_sum > max_sum:
-
-                max_sum = temp_pile.sum_card_ranks()
-                from_pile = temp_pile
+            if pile_iter.length() > 1 and temp_sum > max_sum:
+                max_sum = pile_iter.sum_card_ranks()
+                from_pile = pile_iter
                 rule_can_move = True
 
         if rule_can_move:

@@ -260,7 +260,8 @@ class Game:
     def _empty_piles(self) -> list[int]:
         """Return index for all empty piles"""
         # NOTE: don't use if [] since it returns [] for empty piles
-        # NOTE: Using (if e) or (if e.length() == []) cause problems in other methods, eg _piles_ok())
+        # NOTE: Using (if e) or (if e.length() == []) cause problems
+        # in other methods, eg _piles_ok())
 
         return [i for i, e in enumerate(self.piles) if e.length() == 0]
 

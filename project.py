@@ -6,37 +6,38 @@ DBNAME = "aces_up_db.sqlite"
 db = database.Database(DBNAME)
 RULES = [1, 2, 3, 4, 5, 10, 20, 100, 200, 300, 400, 1000]
 DEFAULT_STRATEGY = [1, 100, 1000]
-EXIT_CODES = ["n", "no", "q", "quit", "exit"]
+EXIT_CODES = ["c", "e", "n", "q", "cancel", "exit", "no", "quit"]
 
 
 def main():
     print("\nSee README for more information.\n")
-    option = game_option()
-    if option == 1:
-        score, _ = play_game(strategy=get_strategy())
-        print(f"\nScore: {score} (48 to win)")
-    elif option == 2:
-        test_strategies()
-    elif option == 3:
-        run_batch()
-    elif option == 4:
-        show_stats()
+    while True:
+        option = game_option()
+        if option == 1:
+            score, _ = play_game(strategy=get_strategy())
+            print(f"\nScore: {score} (48 to win)\n")
+        elif option == 2:
+            test_strategies()
+        elif option == 3:
+            run_batch()
+        elif option == 4:
+            show_stats()
 
 
 def game_option() -> int:
-    print("0. Quit")
-    print("1. Play one game with custom or default strategy (1 100 1000)")
-    print("2. Test different strategies for one game (i.e. the same deck)")
-    print("3. Play a batch of games")
-    print("4. Display strategy odds (won games, from batches only)\n")
+    print("1 - Play one game with custom or default strategy (1 100 1000)")
+    print("2 - Play different strategies for one game (i.e. the same deck)")
+    print("3 - Play a batch of games")
+    print("4 - Display strategy odds (won games, from batches only)")
+    print("\nq - Quit\n")
     while True:
         try:
-            option = int(input("Select option number: "))
-            if option == 0:
+            option = input("Select option: ")
+            if option in EXIT_CODES:
                 sys.exit(0)
-            elif option not in [1, 2, 3, 4]:
+            elif option not in ["1", "2", "3", "4"]:
                 raise ValueError()
-            return option
+            return int(option)
         except ValueError:
             print("Invalid option. Please try again.")
 
@@ -85,7 +86,11 @@ def test_strategies():
     print("Valid rules: 1 2 3 4 5 10 20 100 200 300 400 1000")
     print("Default strategy: 1 100 1000\n")
     while True:
-        score, _ = play_game(strategy=get_strategy(), deck=deck, print_out=False)
+        strategy = get_strategy()
+        if strategy is None:
+            print("\n")
+            return
+        score, _ = play_game(strategy=strategy, deck=deck, print_out=False)
         print(f"\nScore: {score} (48 to win)\n")
 
 
@@ -95,8 +100,9 @@ def get_strategy():
             "Select strategy ('return' for default, 'q' to quit): "
         ).strip()
         if response in EXIT_CODES:
-            sys.exit(0)
-        elif not response:
+            # sys.exit(0)
+            return None
+        if not response:
             return DEFAULT_STRATEGY
         try:
             return check_strategy(response)

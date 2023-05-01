@@ -1,7 +1,7 @@
 # Uncomment imports and code snippets you want to use
 
 # import pprint
-# import winsound
+# import winsound # windows only!
 # import numpy as np
 # import matplotlib.pyplot as plt
 # from src import cards, game, helpers
