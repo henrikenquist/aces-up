@@ -88,16 +88,12 @@ class Card:
     def __repr__(self):
         if not self._repr_cache:
             # self._repr_cache = 'Card({}, {})'.format(self.rank, self.suit)
-            self._repr_cache = (
-                RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
-            )
+            self._repr_cache = RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
         return self._repr_cache
 
     def __str__(self):
         if not self._str_cache:
-            self._str_cache = (
-                RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
-            )
+            self._str_cache = RANK_SHORT_NAMES[self.rank] + SUIT_SHORT_NAMES[self.suit]
         return self._str_cache
 
     def beats(self, other):
@@ -121,7 +117,6 @@ def get_new_deck() -> list[Card]:
         if not c.rank == Rank(0) and not c.rank == Rank(1):
             deck.append(c)
 
-    seed()
     shuffle(deck)
 
     return deck

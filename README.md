@@ -1,18 +1,25 @@
 # Table of contents
 
 - [Aim](#aim)
-- [Aces Up (the game)](#aces-up-the-game)
+- [Aces Up - The card game](#aces-up---the-card-game)
 - [Terminology](#terminology)
 - [Running the software](#running-the-software)
-  - [Using project.py](#using-projectpy)
+  - [Game Plan](#game-plan)
+  - [Game Center](#game-center)
   - [Single game using code](#single-game-using-code)
   - [Batch of games using code](#batch-of-games-using-code)
-- [Strategy](#strategy)
+- [Solutions](#solutions)
+- [Strategies](#strategies)
   - [Evaluation order](#evaluation-order)
   - [Rules](#rules)
-  - [Recommendations](#recommendations)
+  - [Strategy recommendations](#strategy-recommendations)
+- [Batches](#batches)
+  - [Systematic approach](#systematic-approach)
+  - [Stochastic approach](#stochastic-approach)
+  - [Batch recommendations](#batch-recommendations)
 - [Automate strategy generation](#automate-strategy-generation)
 - [Example results](#example-results)
+- [Database](#database)
 - [Requirements](#requirements)
 - [Disclaimer](#disclaimer)
 - [Regrets and refactoring](#regrets-and-refactoring)
@@ -22,11 +29,13 @@
 
 # Aim
 
-To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_ (_Idiots Delight_).
+To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_.
+
+![The code is as perfect as the logo...](/img/aces_up_logo_small.jpg "The code is as perfect as the logo...")
 
 ---
 
-# Aces Up (the game)
+# Aces Up - The card game
 
 1.  Deal four cards in a row face up.
 2.  If there are two or more cards of the same suit, discard all but  
@@ -54,6 +63,8 @@ have been discarded except for the four aces, thus the name of the game.
 
 Source: https://en.wikipedia.org/wiki/Aces_Up
 
+Already tired of this game? Try some of its [variations](http://www.solitairelaboratory.com/acesup.html)!
+
 ---
 
 # Terminology
@@ -63,13 +74,10 @@ Source: https://en.wikipedia.org/wiki/Aces_Up
 | Rule     | Instruction on which card should be moved to empty pile           |
 | Strategy | A sequence of rules ordered by priority                           |
 | Deck     | A unique sequence of cards (i.e. a specific shuffled deck)        |
-| Game     | One game _Aces Up_ using one deck and one strategy                |
+| Game     | One game of _Aces Up_ using one deck and one strategy             |
 | Move     | One move, defined by [card, from_pile, to_pile, rule, move_count] |
-| Solution | A unique combination of deck and winning sequence of moves        |
-
-A specific solution can result from different strategies, since the same sequence of moves can result from different sets of rules. In other words, the same cards in a deck have been moved in the same sequence.
-
-Such "duplicate" solutions are treated as one unique solution when stored in the database, but the link between each winning strategy and the solution is stored for future reference.
+| Solution | A combination of deck and winning sequence of moves               |
+|          |                                                                   |
 
 ---
 
@@ -85,52 +93,41 @@ The latter is the most fun but might challenge both your CPU-fans and your patie
 
 You can [watch a demo](YouTube url goes here) on how to run the software.
 
-### Persistence
-
-Only information regarding won batch games are stored in the database.
-
-Tables:
-- Batches
-
-- Decks
-
-- Moves
-
-- Solutions
-
-- Strategies
-
-### Tips
-
-- Think through your strategies before doing anything large scale.
-- Systematically build the database over time to get more reliable odds.
-- Use [DB Browser](https://sqlitebrowser.org/) or similar to inspect the database.
-- It could be reasonable to run a batch for only one deck, especially if USE_SUB_SETS and/or PERMUTE are used to generate strategies, or if you want to store won games.
-- It is possible to run consecutive batches for one or more strategies and re-use deck(s) from previous won games (batches). By doing so, you can test new strategies for deck(s) you know can be solved.
-Note: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way. Use a separate database for such experiments (which you should try, of course!).
-
 ### Explore the unknown and reach out
 
 If that isn't enough for you, please go ahead and adapt the code to meet your needs and expand the functionality however you like (see `sandbox.py` for sample code and license below).
 
-Feel free to [contact me](https://github.com/henrikenquist) if you have used the code and want to collaborate, share improvements or additions, report bugs, or if you have statistics from more strategies or larger batches. ...or to buy me a coffee!
+Feel free to [contact me](https://github.com/henrikenquist) if you have used the code and want to collaborate, share improvements or additions, report bugs, or if you have statistics from more strategies or larger batches. ...or want to buy me a coffee!
 
-### Other implementations of Aces Up
+## Game Plan
 
-Includes odds/proportion distribution for scores: https://github.com/jwnorman/aces-up
+- Plan, then do: design your [strategies](#strategy-recommendations) and pick a [batch approach](#batches) before doing anything large scale.
 
-Seems to use logic similar to strategy = [200, 2]  
-Wins:
+- Decide [which solutions](#solutions) to store.
+  
+- Systematically build the database over time to get more reliable odds.
 
-- n decks: 4 000 000
-- proportion: 0.007057
-- odds: 141.7
 
-A recursive(?) OO-implementation: https://github.com/magnusbakken/aces-up
+## Game Center
 
-## Using project.py
+In a terminal, navigate to the root folder and type: `python project.py`
 
-The command line user interface in `project.py` is intended to showcase the various features of the software. Not all features are available in every game option, e.g. game and strategy print-outs are disabled in options 2 and 3 in order to avoid *"console clutter"*.
+```
+See README for more information.
+
+1 - Play one game with default or custom strategy 
+2 - Play different strategies for one game (deck)
+3 - Play a batch of games
+4 - Display strategy odds       
+
+q - Quit
+
+Select option:
+```
+
+### Using project.py
+
+The command line user interface in `project.py` is intended to showcase the various features of the software. Not all features are available in every game option, e.g. game and strategy print-outs are disabled in options 2 and 3 in order to avoid *"console clutter"* ™.
 
 With `project.py` you can:
 - run a single game or a batch of games
@@ -138,11 +135,20 @@ With `project.py` you can:
 - use one strategy (default or custom) or many auto-generated strategies
 - show statistics of won games (from batch runs only)
 
-\* Only available for previous batches of won games. You need to know the deck_ids for this feature.
+\* You need to know the deck_id(s) for this feature.
 
-CD into the root folder and run in terminal: `> python project.py`
+Only batch wins are stored in the database (game option 3).
 
-You can enter rules in almost any format:
+The estimated runtime for a batch is calculated from the runtime of won games from previous batches (see `database.py`). For fewer than 10 stored games, it is a simple average. For more games, linear regression is used. So, the more games you have won (i.e. stored in your database), the more precise the estimate will be.
+
+#### User input
+
+In trouble? [Don't panic!](https://en.wikipedia.org/wiki/The_Hitchhiker%27s_Guide_to_the_Galaxy_(fictional)). Instead, input one of these: "c", "e", "n", "q", "cancel", "exit", "no", "quit"
+
+If you panic, press `Ctrl+C` or `Ctrl+Z` depending on OS.
+
+You can enter a strategy (list of rules) in almost any format:
+
 - 300 3 0
 - 300,3,0
 - 300-3-0
@@ -150,19 +156,6 @@ You can enter rules in almost any format:
 - [300 3 0]
 - [300,3,0]
 - ...
-
-```
-See README for more information.
-
-1 - Play one game with custom or default strategy (0: highest card) 
-2 - Play different strategies for one game (i.e. the same deck)
-3 - Play a batch of games
-4 - Display strategy odds (won games, from batches only)       
-
-q - Quit
-
-Select option:
-```
 
 ### Example option 1 - Play one game with custom or default strategy (0: highest card)
 
@@ -225,11 +218,13 @@ Score: 36 (48 to win)
 
 ```
 Select option: 3
-Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400, 1000]
 
 Select strategy/rule list: 200 1 2
 Use sub sets (y/n)? n
 Use permutations (y/n)? n
+Save all (y/n)? y
+Trust random (y/n)? y
 Use new decks ('return') or decks from DB (input deck_ids):  
 Number of decks: 500
 
@@ -238,6 +233,8 @@ Number of decks: 500
 Rule list:          [200, 1, 2]
 Use sub sets:       False
 Permute:            False
+Save all:           True
+Trust random:       True
 Number of games:    500
 Estimated runtime:  00:00:01 (1 s / 2.52 ms)
 
@@ -250,17 +247,11 @@ Stop time:          14:25:35
 Runtime:            00:00:01  (1 s / 2.25 ms)
 
 ===========================================================
-Unique solutions:   4
+Solutions:          4
 Games:              500
 Decks:              500
 Proportion:         0.80 % (0.008000)
 Odds:               125.0
-
-===========================================================
-Unique solutions per deck (4 of 500 decks)
-
-
-[(7, 1), (30, 1), (165, 1), (491, 1)]
 
 ===========================================================
 Score distribution for 500 games:
@@ -316,11 +307,13 @@ Rule counts for 500 games (2109 moves)
 
 ```
 Select option: 3
-Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400]
+Valid rules: [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400, 1000]
 
 Select strategy/rule list: 1 2 200
 Use sub sets (y/n)? y
 Use permutations (y/n)? y
+Save all (y/n)? y
+Trust random (y/n)? y
 Use new decks ('return') or decks from DB (input deck_ids):  
 Number of decks: 1000
 
@@ -329,6 +322,8 @@ Number of decks: 1000
 Rule list:          [1, 2, 200]
 Use sub sets:       True
 Permute:            True
+Save all:           True
+Trust random:       True
 Number of games:    9000
 Estimated runtime:  00:00:09 (9 s / 1.00 ms)
 
@@ -341,16 +336,11 @@ Stop time:          14:38:35
 Runtime:            00:00:13  (13 s / 1.39 ms)
 
 ===========================================================
-Unique solutions:   41
+Solutions:          41
 Games:              9000
 Decks:              1000
 Proportion:         4.10 % (0.041000)
 Odds:               24.4
-
-===========================================================
-Unique solutions per deck (id) for 30 of 1000 decks.
-
-
 
 ===========================================================
 Score distribution for 9000 games:
@@ -411,7 +401,24 @@ Rule counts for 9000 games (35365 moves)
 
 ### Example option 4 - Display strategy odds (won games, from batches only)
 
-Results after running "Example option 3b" batch described above using an empty database, and then running a second batch using the *random* rule (1000) as strategy. 
+Results after running one strategy at the time using the following settings:
+
+- Use sub sets:       n
+- Permute:            n
+- Save all:           y
+- Trust random:       y
+- Use new decks ('return') or decks from DB (input deck_ids):
+- Number of games:    10000
+
+Strategies run: 0 1 2 3 4 10 20 30 40 100 200 300 400 1000 200,2 300,3 400,4
+
+As you can see, some of the strategies did have any wins (but some 47 point games). More games are needed!
+
+One interesting observation is that the random strategy does rather well, at least for this low number of games.
+
+You can use this approach to select candidates for larger batches, intended to produce more reliable odds.
+
+The database containing these batch runs is provided alongside the code (`aces_up_db.sqlite`).
 
 ```
 Select option: 4
@@ -420,14 +427,21 @@ Select option: 4
 Odds        Strategy                                 Decks   Solutions
 ----------------------------------------------------------------------------
 
-62.5        1,2                                       1000          16
-90.9        0                                         1000          11
-111.1       1000                                      1000           9
-142.9       2,1                                       1000           7
-142.9       1,200,2                                   1000           7
-200.0       200,1,2                                   1000           5
-250.0       200,2,1                                   1000           4
-500.0       1                                         1000           2
+101.0       4                                        10000          99
+122.0       0                                        10000          82
+133.3       200,2                                    10000          75
+137.0       400,4                                    10000          73
+140.8       100,200,2                                10000          71
+153.8       1000                                     10000          65
+172.4       2                                        10000          58
+238.1       300,3                                    10000          42
+250.0       200                                      10000          40
+250.0       400                                      10000          40
+400.0       300                                      10000          25
+476.2       3                                        10000          21
+2500.0      1                                        10000           4
+5000.0      100                                      10000           2
+10000.0     10                                       10000           1
 
 ----------------------------------------------------------------------------
 Odds        Strategy                                 Decks   Solutions
@@ -455,16 +469,19 @@ print(f"Score: {my_game.score} (48 to win).")
 from src import batch
 
 def main():
-    db_name = "aces_up.sqlite"
+    DBNAME = "aces_up.sqlite"
 
-    # Strategy generation
-    USE_SUB_SETS = False
-    PERMUTE = False
-    # Console logging
-    STRATEGY_PRINT_OUT = False
-    GAME_PRINT_OUT = False
+    kwargs = {
+        "DB_NAME": DBNAME,
+        "USE_SUB_SETS": False,
+        "PERMUTE": False,
+        "SAVE_ALL": True,
+        "TRUST_RANDOM": True,
+        "STRATEGY_PRINT_OUT": False,
+        "GAME_PRINT_OUT": False,
+    }
 
-    batch.run([db_name, USE_SUB_SETS, PERMUTE, STRATEGY_PRINT_OUT, GAME_PRINT_OUT])
+    batch.run(**kwargs)
 
 if __name__ == "__main__":
     main()
@@ -474,7 +491,23 @@ Note: Print-outs increase runtime. Especially GAME_PRINT_OUT, which also clutter
 
 ---
 
-# Strategy
+# Solutions
+
+A game can be won by one or many solutions. You definitely want to store all of those.
+
+A solution can be the result of different strategies, since the same sequence of moves can result from different sets of rules. In other words, the cards have been moved in the same order but for different reasons.
+
+So, what do you want to store? A solution to a game regardless of how it was achieved, or information on which strategy had that solution (resulting in potential "duplicate" solutions)? Is your head spinning yet?
+
+Per default, the link between a solution and a strategy is stored in the `solutions` table for all won games (when running batches), even if another strategy already has stored the same solution in the database. This is in line with the aim of the project.
+
+It is possible avoid that behaviour when running a batch ("Save all (y/n)? n"). Then, links between a solution and new strategies winning a game are not stored if a solution is previously stored by another strategy for that game (note: that strategy gets all the credit in the odds!).
+
+This could be handy if you want to explore the odds of winning a game of _Aces Up_ **at all** using your strategies. ... but the strategy odds will be messed up.
+
+---
+
+# Strategies
 
 ## Evaluation order
 
@@ -496,7 +529,7 @@ Example:
 
 The rules are implemented in `strategy.py`.
 
-Rule moves card from leftmost pile if more than one card matches the rule.
+A rule moves a card from the leftmost pile if more than one card matches the rule.
 
 Moves are only made from piles larger than one card.
 
@@ -528,18 +561,20 @@ Moves are only made from piles larger than one card.
 ### A friendly conversation
 
 A player might say:
-> "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use the latter?"
+> "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use those?"
 
 I reply:
 > "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
 
 The player is not convinced:
-> "Why would you do that? Isn't that stupid? Don't you want to win the game?"
+> "Why would you want to do that? Isn't that stupid? Don't you want to win the game?"
 
 I explain:
 > "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
 > 
 > Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
+>
+> By the way, only allowing for ace moves is a [known variation](https://en.wikipedia.org/wiki/Aces_Up#Variations) which make it harder to win (odds: 270). Don't you like a challenge?
 
 ### Missing rules
 
@@ -552,26 +587,109 @@ Some examples of additional (and in hindsight, obvious) rule concepts could be:
 
 This concept could prioritize elimination of lower cards better than the existing rules. The same idea goes for the other classes of rules as well.
 
-## Recommendations
+
+## Strategy recommendations
 
 I would recommend that you design your strategy based on the following principles:
 
-1. Place any *Ace* rule before any corresponding *Highest card* rule.
-3. Place any *Suit below* (\*) rule before any other corresponding rule.
-4. Add a rule that guarantees a move somewhere after *Suit below* rule (\*).
-5. Remember: rule evaluation starts with the first rule after each deal/discard.
-6. Remember: more rules in a strategy is **not** necessarily better.
-7. Finally, be creative but clever.
+1. Place any *Ace* rule before any *Highest card* rule.
+2. Place any *Suit below* (\*) rule before any other corresponding rule.
+3. Add a rule that guarantees a move somewhere after *Suit below* rule (\*).
+4. Finally, be creative but clever.
+   
+Remember:
+
+- Rule evaluation starts with the first rule after each deal/discard.
+- The rule order is rearranged when using `PERMUTE`, so the original order of rules in the strategy doesn't matter (that's why it's called *Strategy/rule list* in the batch run).
+- More rules in a strategy is **not** necessarily better.
 
 Generally:
 - Good form: 1 2
 - Bad form: 2 1
 - Good form: 300 3
 - Bad form: 3 300
-- Really bad form: 0 1 2 3 4 10 20 30 40 100 200 300 400 \*
+- Really bad form: 0 1 2 3 4 10 20 30 40 100 200 300 400 1000 \*
 - Best form? Well, that is what it's all about. You tell me!
 
-\* Well, it is meaningful when using `SUB_SET` and/or `PERMUTE` in batches, e.g. if you want to run a really big batch (see *Number of games* below).
+\* Well, it is meaningful when using `USE_SUB_SETS` and/or `PERMUTE` in batches, e.g. if you want to run a really big batch (see *Number of games* below).
+
+---
+
+# Batches
+
+A batch consists of nested for loops:
+
+- for each deck
+  - for each strategy
+
+There are two approaches towards randomness when testing various strategies with batches - "systematic" and "stochastic".
+
+## Systematic approach
+
+This approach considers the fact that if one strategy has won a game, another (similar) strategy will have a higher chance of winning that particular game - especially if the rule list is well-designed. In that sense, there is less randomness involved. Since all strategies use the same decks in a batch, the resulting odds are misleading if the number of decks is low.
+
+This approach is suitable when comparing strategies for a given set of decks, or for *mega-batches* ™. 
+
+Workflow:
+1. Test **many** strategies for **many** deck(s)
+2. Repeat 1 using the same strategies
+3. Test new strategies using **the same** decks as in 1 and 2 (via the deck_id) and the same **total number** of decks
+
+Note: The flag `TRUST_RANDOM` is automatically set to `False` if `USE_SUB_SETS` or `PERMUTE` == `True` [(info)](#stochastic-approach).
+
+Select game option 3 to run steps 1 and 2, with these settings:
+
+- Use sub sets (y/n)? y or n
+- Use permutations (y/n)? y or n
+- Save all (y/n)? y or n
+- Trust random (y/n)? n
+- Use new decks ('return') or decks from DB (input deck_ids):
+- Number of decks: choose reasonably
+
+Select game option 3 to run step 3, with these settings:
+
+- Use sub sets (y/n)? y or n
+- Use permutations (y/n)? y or n
+- Save all (y/n)? y or n
+- Trust random (y/n)? n
+- Use new decks ('return') or decks from DB (input deck_ids): deck_ids from **all** previous batches
+- Number of decks: **total** number of decks for previous strategy
+
+Yes, I said it was systematic. Keep a log!
+
+Tip: You might want to write code to fetch the deck_ids. I forgot that bit.
+
+It should be straightforward to do and be based on joining the table `solutions` and `decks` according to the strategies generated by the batch settings. Send me a pull request when you're done.
+
+## Stochastic approach
+
+This approach is more happy-go-lucky and relies on the `shuffle` function in Python to deliver randomness correctly. If it does, it is unlikely that two games are played using the same deck (one in ~8x10<sup>67</sup>). Comparing the odds of different strategies then relies on statistics and for that you need equally **many** games for each strategy.
+
+One advantage with this approach is that you can speed things up by trusting the decks "always" are new. Per default, the flag `TRUST_RANDOM` is set to `True` in `project.py` (i.e. don't check if deck is already in database). It is possible avoid that behaviour when running a batch ("Trust random (y/n)? n")
+
+Workflow:
+1. Test **one** strategy for **many** decks
+2. Repeat 1 using the same or another strategy
+3. Keep track of the total number of games played by each strategy (see database table `batches`)!
+
+Select game option 3 to run steps 1 and 2, with these settings:
+
+- Use sub sets (y/n)? n
+- Use permutations (y/n)? n
+- Save all (y/n)? y or n
+- Trust random (y/n)? y
+- Use new decks ('return') or decks from DB (input deck_ids):
+- Number of decks: choose reasonably
+
+Easier and better, right? But what if you want to test new strategies on the same decks? Let's go systematic (step 3)!
+
+## Batch recommendations
+
+- Use a separate database for each approach! They don't play nice.
+
+- Make sure each strategy has played the same number of games, e.g. by always using the same number of decks for each batch (see database table `batches`). Otherwise the odds can't be reliably compared across strategies.
+
+- Use the same settings of the flags `SAVE_ALL` and `TRUST_RANDOM` for a database.
 
 ---
 
@@ -608,16 +726,16 @@ For one deck and n rules:
 
 Example:
 
-- USE_SUB_SETS = `True`
-- PERMUTE = `True`
-- 13 rules (i.e. all implemented rules)
-- -> 6 749 977 113 [games for each deck](https://www.symbolab.com/solver/induction-calculator/solve%20for%20%5Csum_%7Bn%3D1%7D%5E%7B13%7D%20%5Cleft(n%5Cright)!?or=input).
+- `USE_SUB_SETS` = `True`
+- `PERMUTE` = `True`
+- 14 rules (i.e. all implemented rules)
+- -> 93 928 268 313 [games for each deck](https://www.symbolab.com/solver/induction-calculator/solve%20for%20%5Csum_%7Bn%3D1%7D%5E%7B14%7D%20%5Cleft(n%5Cright)!?or=input).
 
 ---
 
 # Example results
 
-Since the number of unique decks is 52! (~8x10<sup>67</sup>), the number of games needed for each strategy to get a good estimate of the odds is also probably quite large. I haven't done the math, but neither did Stanislaw Ulam who instead turned to John von Neumann who ran [simulations on the ENIAC](https://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/LA-UR-88-9068) - and voilà! [Monte Carlo simulations](https://youtu.be/OgO1gpXSUzU?t=56) were born.  
+Since the number of unique decks is 52! (~8x10<sup>67</sup>), the number of games needed for each strategy to get a good estimate of the odds is also probably quite large. I haven't done the math, but neither did Stanislaw Ulam who instead turned to John von Neumann and ran [simulations on the ENIAC](https://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/LA-UR-88-9068) - and voilà! [Monte Carlo simulations](https://youtu.be/OgO1gpXSUzU?t=56) were born.  
 
 Note: Running more strategies using a deck which has a solution for one strategy will mess up the odds. This is the case since it is likely that such a deck can be solved in more than one way.
 
@@ -625,7 +743,7 @@ Note: I would not recommend running strategies like in the example below if the 
 
 Note: All decks and moves for won games in batches are stored in the database. This means that it is possible to analyze which strategies are best. The kind of table which is shown below doesn't paint the whole picture!
 
-The following table is created using sample code in `sandbox.py` and a database containing many batch runs using a unique deck for each game, with PERMUTE and USE_SUB_SETS set to False.
+The following table is created using sample code in `sandbox.py` and a database containing many batch runs using a unique deck for each game, with ´PERMUTE` and `USE_SUB_SETS` set to False.
 
 | Odds  | Strategy                           | Decks     | Solutions |
 | ----- | ---------------------------------- | --------- | --------- |
@@ -656,23 +774,60 @@ The following table is created using sample code in `sandbox.py` and a database 
 
 ---
 
+# Database
+
+You can use [DB Browser](https://sqlitebrowser.org/) or similar to inspect and manipulate databases (fix things that went haywire).
+
+| Table      |             |                                     |
+| ---------- | ----------- | ----------------------------------- |
+| Batches    | batch_id    | INTEGER UNIQUE NOT NULL PRIMARY KEY |
+|            | n_decks     | INTEGER                             |
+|            | rule_list   | TEXT                                |
+|            | permute     | INTEGER                             |
+|            | sub_sets    | INTEGER                             |
+|            | n_games     | INTEGER                             |
+|            | runtime     | REAL                                |
+| Decks      |             |                                     |
+|            | deck_id     | INTEGER UNIQUE NOT NULL PRIMARY KEY |
+|            | cards       | TEXT                                |
+| Moves      |             |                                     |
+|            | moves_id    | INTEGER UNIQUE NOT NULL PRIMARY KEY |
+|            | moves_str   | TEXT                                |
+|            | rule_counts | TEXT                                |
+| Solutions  |             |                                     |
+|            | solution_id | INTEGER UNIQUE NOT NULL PRIMARY KEY |
+|            | deck_id     | INTEGER                             |
+|            | moves_id    | INTEGER                             |
+|            | strategy_id | INTEGER                             |
+|            | batch_id    | INTEGER                             |
+| Strategies |             |                                     |
+|            | strategy_id | INTEGER UNIQUE NOT NULL PRIMARY KEY |
+|            | rule_list   | TEXT                                |
+|            |             |                                     |
+
+Yes, `rule_list` is duplicated in the `batches` table instead of using the obvious `strategy_id`. This is probably due to some old hack I had to conjure up in the beginning when I didn't know better. So shoot me! ...or rather, fix it and send a pull request.
+
+---
+
 # Requirements
+
+This software is written in [Python](https://www.python.org/downloads/). You need to install that to be able to play _Aces Up_.
 
 ### Modules
 
-- Running a single game requires no additional modules.
+Imported modules are listed in `requirements.txt`.
 
-- Running batches requires `numpy`
+- Running _Aces Up_ via `project.py` requires **no** installation of additional modules.
+
+- Running `test_project.py` requires `pytest` and dependencies.
   
-Project modules are listed in `requirements.txt`.
+So, why the long requirement list?
 
-- I installed `pytest` (used by `test_project.py`) and `numpy` (used for predicting batch runtime) and got a lot of "bonus" modules.
+- I installed `pytest` and got a lot of "bonus" modules (dependencies).
   
-- I also installed `matplotlib` for plotting expected runtime. This module, and its "bonus" modules are not used by `project.py`, but could be used in `sandbox.py` for various purposes.
+- I also installed `matplotlib` and `numpy` for plotting runtimes in `sandbox.py` (I like pretty pictures). These modules, and their dependencies, are not used by `project.py`.
 
-Windows users will hear a beep when a batch run is finished (using the `winsound` module). Users on other platforms will have to stare at the screen for hours to know when their mega batches are done.
-
-If you experience a `ModuleNotFoundError`, this might be why (although I wrapped the thing in try-except-blocks).
+Windows users will hear a beep when a batch run is finished (using the `winsound` module). Users on other platforms will have to stare at the screen for hours on end to know when their *mega-batches* ™ are done. If you experience a `ModuleNotFoundError`, this might be why (although I wrapped the thing in try-except-blocks).
 
 ### Write permission
 
@@ -682,17 +837,29 @@ When using batches (running and extracting statistics), an sqlite database is re
 
 # Disclaimer
 
-This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, sqlite, git, virtual environments, VSCode, and so forth - quite a mouthful. 
+This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, sqlite, git, pip, virtual environments, VSCode, extensions, and so forth - quite a mouthful. In order to not overextend myself, I let an AI create the logo.
 
-Hence, it is by no means the most elegant, efficient and "pythonic" code out there. Rather, it's a playground and hopefully an incrementally less messy learning experiment (which might be reflected in the code evolution as seen in the commits). One upside is that there is plenty of room for improvement!
+Therefore, it is by no means the most elegant, efficient and "pythonic" code out there. Rather, it's a playground and hopefully an incrementally less messy learning experiment (which might be reflected in the code evolution as seen in the commits). One upside is that there is plenty of room for improvement!
 
 As always, the TODO-list will perservere...
+
+### Not happy?
+
+If you're not happy with my thing, there are other Aces Up solvers out there:
+
+[This one](https://github.com/jwnorman/aces-up) includes odds/proportion distribution for scores. Seems to use logic similar to strategy = [200, 2].
+
+- n decks: 4 000 000
+- proportion: 0.007057
+- odds: 141.7
+
+A recursive(?) [OO-styled implementation](https://github.com/magnusbakken/aces-up) 
 
 ---
 
 # Regrets and refactoring
 
-Would I design the software the same way again? No, certainly not. Game logic is convoluted, code is overly complicated, and the overall design follows the infamous *"...but it works"* pattern. Also, I have learned things along the way, things which would have been helpful at the beginning of the project but were more akin to magic at the time.
+Would I design the software the same way again? No, certainly not. Game logic is convoluted, code is overly complicated, and the software design follows the infamous *"...but it works"* ™ pattern. Also, I have learned things along the way, things which would have been helpful at the beginning of the project but were more akin to magic at the time.
 
 Any regrets? No, nothing that can't be fixed by refactoring!
 
@@ -702,12 +869,12 @@ So, what about the future?
 
 Refactoring
 
-- optimize the code; running large batches on an old laptop is takes time
+- optimize the code; running large batches on an old laptop takes time, and energy is at a premium in this day and age
 - use a more object-oriented approach
 - create a design which facilitates easy addition of new rules
 - make the code more "pythonic" and less verbose
-- use a database framework such as SQLAlchemy
-- delegate logging and timers to decorators
+- delegate logging/print-outs and timers to decorators
+- (use a database framework such as SQLAlchemy)
 - ... and the list goes on
 
 New features
@@ -717,9 +884,14 @@ New features
 - present game output graphically (e.g. display card images when playing a game)
 - re-play a previous won game at "human speed"
 - let the user set the default strategy and other settings (stored in db, text file, or cookie)
-- actually let the user play the game manually (I guess some of you just wanted that)
 - ... see you in CS50W  *wink wink*
 
+Actually let the user play the game manually? I guess some of you just wanted that.
+
+There are **so** many implementations out on the interweb that I can't be bothered making yet another one.
+
+I made something else instead. It was fun!
+  
 ---
 
 # License

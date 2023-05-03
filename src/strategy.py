@@ -1,4 +1,5 @@
 import random
+import inspect
 from typing import Callable
 from src import cards
 
@@ -87,30 +88,25 @@ class Strategy:
     def move_highest_card(self, curr_game) -> bool:
         """Move (first) highest card from any pile."""
 
-        rule_can_move = False
-        rule_str = "move_highest_card"
+        from_pile = None
         max_rank = cards.Rank(0)  # JOKER
-
         for _, pile_iter in enumerate(curr_game.piles):
             if pile_iter.length() > 1 and pile_iter.last_card().rank > max_rank:
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     ### -------------- HIGHEST --------------  ###
 
     def move_highest_has_higher_in_suit_below(self, curr_game) -> bool:
         """Move highest card from pile where card has a card of same suit below."""
 
-        rule_can_move = False
-        rule_str = "move_highest_has_higher_in_suit_below"
+        from_pile = None
         max_rank = cards.Rank(0)  # JOKER
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
@@ -119,21 +115,18 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_highest_from_highest_rank_sum(self, curr_game) -> bool:
         """Move from pile with highest card rank sum."""
 
-        rule_can_move = False
-        rule_str = "move_highest_from_highest_rank_sum"
+        from_pile = None
         max_rank = cards.Rank(0)  # JOKER
         max_rank_sum = max(p.sum_card_ranks() for p in curr_game.piles)
-
         for _, pile_iter in enumerate(curr_game.piles):
             temp_sum = pile_iter.sum_card_ranks()
 
@@ -144,24 +137,20 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_highest_from_smallest(self, curr_game) -> bool:
         """Move highest card from the smallest pile."""
 
-        rule_can_move = False
-        rule_str = "move_highest_from_smallest"
-        # min_pile_length = 100
+        from_pile = None
         min_pile_length = min(p.length() for p in curr_game.piles)
         if min_pile_length < 2:
             min_pile_length = 2
         max_rank = cards.Rank(0)  # JOKER
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == min_pile_length
@@ -170,21 +159,18 @@ class Strategy:
                 min_pile_length = pile_iter.length()
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_highest_from_largest(self, curr_game) -> bool:
         """Move highest card from the (first) largest pile."""
 
-        rule_can_move = False
-        rule_str = "move_highest_from_largest"
+        from_pile = None
         max_pile_length = max(p.length() for p in curr_game.piles)
         max_rank = cards.Rank(0)  # JOKER
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == max_pile_length
@@ -192,21 +178,19 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     ### -------------- LOWEST --------------  ###
+
     def move_lowest_has_higher_in_suit_below(self, curr_game) -> bool:
         """Move lowest card from pile where card has a card of same suit below."""
 
-        rule_can_move = False
-        rule_str = "move_lowest_has_higher_in_suit_below"
+        from_pile = None
         max_rank = cards.Rank(14)  # ACE
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
@@ -215,21 +199,18 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_lowest_from_highest_rank_sum(self, curr_game) -> bool:
         """Move lowest card from pile with lowest card rank sum."""
 
-        rule_can_move = False
-        rule_str = "move_lowest_from_highest_rank_sum"
+        from_pile = None
         max_rank = cards.Rank(14)  # ACE
         max_rank_sum = max(p.sum_card_ranks() for p in curr_game.piles)
-
         for _, pile_iter in enumerate(curr_game.piles):
             temp_sum = pile_iter.sum_card_ranks()
 
@@ -240,23 +221,20 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_lowest_from_smallest(self, curr_game) -> bool:
         """Move lowest card from the smallest pile."""
 
-        rule_can_move = False
-        rule_str = "move_lowest_from_smallest"
+        from_pile = None
         min_pile_length = min(p.length() for p in curr_game.piles)
         if min_pile_length < 2:
             min_pile_length = 2
         max_rank = cards.Rank(14)  # ACE
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == min_pile_length
@@ -265,21 +243,18 @@ class Strategy:
                 min_pile_length = pile_iter.length()
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_lowest_from_largest(self, curr_game) -> bool:
         """Move lowest card from the (first) largest pile."""
 
-        rule_can_move = False
-        rule_str = "move_lowest_from_largest"
+        from_pile = None
         max_pile_length = max(p.length() for p in curr_game.piles)
         max_rank = cards.Rank(14)  # ACE
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == max_pile_length
@@ -287,22 +262,19 @@ class Strategy:
             ):
                 max_rank = pile_iter.last_card().rank
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     ### -------------- ACE --------------  ###
 
     def move_ace_from_highest_rank_sum(self, curr_game) -> bool:
         """Move ace from pile with highest card rank sum."""
 
-        rule_can_move = False
-        rule_str = "move_ace_from_highest_rank_sum"
+        from_pile = None
         max_sum = 0
-
         for _, pile_iter in enumerate(curr_game.piles):
             temp_sum = pile_iter.sum_card_ranks()
 
@@ -313,19 +285,16 @@ class Strategy:
             ):
                 max_sum = pile_iter.sum_card_ranks()
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_ace_has_suit_below(self, curr_game) -> bool:
         """Move the first ace which has card of same suit below."""
 
-        rule_can_move = False
-        rule_str = "move_ace_has_suit_below"
-
+        from_pile = None
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
@@ -333,38 +302,32 @@ class Strategy:
                 and pile_iter.has_suit_below()
             ):
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_ace_from_smallest(self, curr_game) -> bool:
         """Move from the smallest pile with an ace."""
 
-        rule_can_move = False
-        rule_str = "move_ace_from_smallest"
+        from_pile = None
         min_pile_length = 100
-
         for _, pile_iter in enumerate(curr_game.piles):
             if pile_iter.last_is_ace() and 1 < pile_iter.length() < min_pile_length:
                 min_pile_length = pile_iter.length()
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_ace_from_largest(self, curr_game) -> bool:
         """Move from the largest pile with an ace."""
 
-        rule_can_move = False
-        rule_str = "move_ace_from_largest"
+        from_pile = None
         max_pile_length = 1
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
@@ -373,53 +336,47 @@ class Strategy:
             ):
                 max_pile_length = pile_iter.length()
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_first_ace(self, curr_game) -> bool:
         """Move first ace."""
 
-        rule_can_move = False
-        rule_str = "move_first_ace"
-
+        from_pile = None
         for _, pile_iter in enumerate(curr_game.piles):
             if pile_iter.length() > 1 and pile_iter.last_is_ace():
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     ### -------------- RANDOM --------------  ###
 
     def move_from_random(self, curr_game) -> bool:
         """Move from random pile"""
 
-        rule_can_move = False
-        rule_str = "move_from_random"
+        from_pile = None
         candidates = [i for i, p in enumerate(curr_game.piles) if p.length() > 1]
         if candidates:
-            rule_can_move = True
             from_pile = curr_game.piles[random.choice(candidates)]
-            curr_game.move(from_pile, rule_str)
 
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     ### -------------- NOT IN USE --------------  ###
 
     def move_from_smallest_has_higher_in_suit_below(self, curr_game) -> bool:
         """Move from smallest pile where card has a card of same suit below."""
 
-        rule_can_move = False
-        rule_str = "move_from_smallest_has_higher_in_suit_below"
+        from_pile = None
         min_pile_length = 100
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() < min_pile_length
@@ -428,20 +385,17 @@ class Strategy:
             ):
                 min_pile_length = pile_iter.length()
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
 
     def move_from_largest_has_higher_in_suit_below(self, curr_game) -> bool:
         """Move from largest pile where card has a card of same suit below."""
 
-        rule_can_move = False
-        rule_str = "move_from_largest_has_higher_in_suit_below"
+        from_pile = None
         max_pile_length = 1
-
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > max_pile_length
@@ -450,9 +404,8 @@ class Strategy:
             ):
                 max_pile_length = pile_iter.length()
                 from_pile = pile_iter
-                rule_can_move = True
 
-        if rule_can_move:
-            curr_game.move(from_pile, rule_str)
-
-        return rule_can_move
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True

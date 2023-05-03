@@ -22,6 +22,8 @@ class Database:
 
     def __init__(self, name: str):
         self.name = name
+        self.SAVE_ALL = True
+        self.TRUST_RANDOM = True
         self._repr_cache = None
         self._str_cache = None
 
@@ -44,6 +46,9 @@ class Database:
         )
         # one move: (card, from_pile, to_pile, move_count)
         # moves_str: a sequence of moves
+        # pile indices: 0-3
+        # -1 as from_pile denotes a deal
+        # 4 as to_pile denotes a discard
 
         cur.execute(
             """CREATE TABLE IF NOT EXISTS strategies (
@@ -76,17 +81,12 @@ class Database:
 
         conn.commit()
         cur.close()
+        conn.close()
 
-    # def __enter__(self):
-    #     self.conn = sqlite3.connect()
-    #     return self.conn.cursor()
-
-    # def __exit__(self, type, value, traceback):
-    #     self.conn.close()
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
     #
     #  Read
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
 
     def get_db_info(self, *args: str) -> dict:
         """Get database info.
@@ -104,64 +104,48 @@ class Database:
         try:  # mainly used as a learning example
             conn = sqlite3.connect(self.name)
             cur = conn.cursor()
-
             db_info = {"self": self.name}
-
             for item in args:
-                if item == "n_batches" or item == "all":
+                if item in ("n_batches", "all"):
                     cur.execute("""SELECT COUNT(*) FROM batches """)
                     n_batches = cur.fetchone()
                     db_info["n_batches"] = n_batches[0]
-
-                if item == "batch_ids" or item == "all":
+                if item in ("batch_ids", "all"):
                     batch_ids = []
                     cur.execute(
                         """SELECT batch_id FROM batches ORDER BY batch_id ASC """
                     )
                     batch_rows = cur.fetchall()
-
                     for batch in batch_rows:
                         batch_ids.append(batch[0])
-
                     db_info["batch_ids"] = batch_ids
-
-                if item == "n_decks" or item == "all":
+                if item in ("n_decks", "all"):
                     cur.execute(
                         """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
                     )
                     batch_rows = cur.fetchall()
-
                     n_decks = []
-
                     for batch_id in batch_rows:
                         n, _, _, _ = self.get_batch_info(batch_id[0])
                         n_decks.append(n)
-
                     db_info["n_decks"] = n_decks
-
-                if item == "cum_n_decks" or item == "all":
+                if item in ("cum_n_decks", "all"):
                     temp = self.get_db_info("n_decks")
                     db_info["cum_n_decks"] = list(acc(temp["n_decks"]))
-
-                if item == "avg_runtimes" or item == "all":
+                if item in ("avg_runtimes", "all"):
                     cur.execute(
                         """SELECT batch_id FROM batches ORDER BY batch_id ASC"""
                     )
                     batch_rows = cur.fetchall()
-
                     avg_runtimes = []
-
                     for batch_id in batch_rows:
                         _, n_games, _, runtime = self.get_batch_info(batch_id[0])
                         avg_runtimes.append(runtime / n_games)
-
                     db_info["avg_runtimes"] = avg_runtimes
-
             return db_info
-
-        except sqlite3.OperationalError as e:
-            print(e)
-            raise NotFoundError(f"Unable to open database {self.name}")
+        except sqlite3.OperationalError as err_msg:
+            # print(err_msg)
+            raise NotFoundError(f"Unable to open database {self.name}") from err_msg
 
     def get_batch_info(self, batch_id: int) -> list:
         """Return n_decks, n_games, n_solutions, runtime"""
@@ -169,7 +153,6 @@ class Database:
             # TODO: use *args as in get_db_info() ?
             conn = sqlite3.connect(self.name)
             cur = conn.cursor()
-
             cur.execute("""SELECT n_decks FROM batches WHERE batch_id=?""", (batch_id,))
             n_decks = cur.fetchone()[0]
             cur.execute("""SELECT n_games FROM batches WHERE batch_id=?""", (batch_id,))
@@ -181,14 +164,13 @@ class Database:
                 (batch_id,),
             )
             n_solutions = cur.fetchone()[0]
-
             return n_decks, n_games, n_solutions, runtime
-
-        except sqlite3.OperationalError as e:
-            print(e)
-            raise NotFoundError(f"Unable to find batch id {batch_id}")
+        except sqlite3.OperationalError as err_msg:
+            print(err_msg)
+            raise NotFoundError(f"Unable to find batch id {batch_id}") from err_msg
         finally:
             cur.close()
+            conn.close()
 
     def get_avg_runtime(self, new_decks: int = 0) -> float:
         """Calculate predicted average runtime.
@@ -199,7 +181,6 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         avg_runtime = 0.001  # default to 1 ms if empty database
         lin_reg_limit = 10  # minimum n batches to use linear regression
         runtimes = []
@@ -207,20 +188,15 @@ class Database:
         running_val = 0
         db_info = self.get_db_info("batch_ids")
         batch_ids = db_info["batch_ids"]
-
-        # Simple average for small number of batches:
+        # Simple average for small number of batches
         if 0 < len(batch_ids) < lin_reg_limit:
             cur.execute("""SELECT n_games FROM batches""")
-            n_games = [sum(x) for x in zip(*cur.fetchall())][
-                0
-            ]  # [0] since value returned as list
+            n_games = [sum(x) for x in zip(*cur.fetchall())][0]
             cur.execute("""SELECT runtime FROM batches""")
             tot_time = [sum(x) for x in zip(*cur.fetchall())][0]
             avg_runtime = tot_time / n_games
-
-        # Linear regression for larger number of batches (or rather, decks):
+        # Linear regression for larger total number of decks in batches
         elif len(batch_ids) >= lin_reg_limit:
-            # print('lin. regr. used for runtime average')
             for batch_id in batch_ids:
                 n_decks, n_games, _, runtime = self.get_batch_info(batch_id)
                 running_val += n_decks
@@ -229,14 +205,11 @@ class Database:
                     running_val
                 )  # TODO: could use itertools.accumulate instead
 
-            # TODO: Should weigh runtime according to number of games in batch
-            # Now each batch is treated equally, regardless of 1 game or 1,000,000 games
             slope, intercept = np.polyfit(cum_n_decks, runtimes, 1)
 
             avg_runtime = intercept + (running_val + new_decks) * slope
-
         cur.close()
-
+        conn.close()
         return avg_runtime
 
     def get_rule_counts(self, **kwargs) -> int:
@@ -253,10 +226,8 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         temp_list = []
         rule_counts = defaultdict(int)
-
         if not kwargs:  # get all moves in db
             cur.execute("""SELECT rule_counts FROM moves """)
         else:
@@ -275,20 +246,18 @@ class Database:
                 cur.execute(query, (id,))
 
         moves = cur.fetchall()
-
-        for row in range(len(moves)):
-            temp_list.extend(eval(moves[row][0]))
-
+        for _, move in enumerate(moves):
+            temp_list.extend(eval(move[0]))
+        # for row in range(len(moves)):
+        #     temp_list.extend(eval(moves[row][0]))
         for rule, count in temp_list:
             rule_counts[rule] += count
-
         rule_counts = [
             (k, v)
             for (k, v) in sorted(rule_counts.items(), key=lambda x: x[1], reverse=True)
         ]
-
         cur.close()
-
+        conn.close()
         return rule_counts
 
     def get_strategy_stats(self, curr_strategy: list[int]) -> list[int]:
@@ -299,12 +268,10 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         n_solutions = 0
         n_decks = 0
         odds = 0
-
-        if not type(curr_strategy) == int:
+        if not isinstance(curr_strategy, int):
             rule_list = ",".join(
                 [str(e) for _, e in enumerate(curr_strategy)]
             )  # eg: '1,20,100'
@@ -315,36 +282,31 @@ class Database:
                 (curr_strategy,),
             )
             rule_list = cur.fetchone()[0]
-
         cur.execute(
             """SELECT strategy_id FROM strategies WHERE rule_list=?""",
             (rule_list,),
         )
         strategy_id = cur.fetchone()[0]
-
         if strategy_id:
             cur.execute(
                 """SELECT COUNT(*) FROM solutions WHERE strategy_id=?""",
                 (strategy_id,),
             )
             n_solutions = cur.fetchone()[0]
-
             cur.execute(
                 """SELECT DISTINCT batch_id FROM solutions WHERE strategy_id=?""",
                 (strategy_id,),
             )  # get unique batches
             batch_rows = cur.fetchall()
-
             for batch in batch_rows:
                 cur.execute(
                     """SELECT n_decks FROM batches WHERE batch_id=?""",
                     (batch[0],),
                 )
                 n_decks += cur.fetchone()[0]
-
         cur.close()
+        conn.close()
         odds = n_decks / n_solutions
-
         return n_solutions, n_decks, odds
 
     def get_strategy_stats_list(
@@ -362,13 +324,10 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         stats_list = []
         asc = True
-
         cur.execute("""SELECT * FROM strategies """)
         strategy_rows = cur.fetchall()
-
         for strat in strategy_rows:
             n_solutions, n_decks, odds = self.get_strategy_stats(strat[0])
             stats_list.append(
@@ -379,18 +338,14 @@ class Database:
                     "Odds": odds,
                 }
             )
-
         stats_list = [e for e in stats_list if e["Decks"] >= min_n_decks]
-
         if str.capitalize(sort_by) == "Odds":
             asc = False
-
         stats_list = sorted(
             stats_list, key=lambda x: x[str.capitalize(sort_by)], reverse=asc
         )
-
         cur.close()
-
+        conn.close()
         return stats_list
 
     def get_deck(self, deck_id: int) -> list[cards.Card]:
@@ -398,57 +353,50 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         deck = []
-
         cur.execute("""SELECT cards FROM decks WHERE deck_id=?""", (deck_id,))
         card_str = cur.fetchone()
-
         if card_str:
             deck = cards.get_deck_from_str(card_str[0])
         # else:
         #     print(f'Deck ID {deck_id} not in database {self.name}')
-
         cur.close()
-
+        conn.close()
         return deck
 
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
     #
     #  Validate
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
 
-    def is_new_deck(self, curr_deck: list[cards.Card]) -> bool:
+    def is_new_deck(self, curr_deck):
         """Check if deck is in database. Return is_new, deck_id, cards.
 
         A deck is defined by a unique string of cards.
         """
+
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
-        cards = ",".join(
+        curr_cards = ",".join(
             [str(e) for _, e in enumerate(curr_deck)]
         )  # eg: '4h,Td,9c,...'
-
         cur.execute(
-            "SELECT * FROM decks WHERE cards=? ", (cards,)
+            "SELECT * FROM decks WHERE cards=? ", (curr_cards,)
         )  # VALUES must be a tuple or a list
         deck_row = cur.fetchone()
-
-        if deck_row == None:
+        if deck_row is None:
             is_new = True
             cur.execute("SELECT COUNT(deck_id) FROM decks")
             deck_id = cur.fetchone()[0] + 1
         else:
             is_new = False
             deck_id = deck_row[0]
-
         conn.commit()
         cur.close()
+        conn.close()
+        return is_new, deck_id, curr_cards
 
-        return is_new, deck_id, cards
-
-    def is_new_move_sequence(self, curr_moves: list) -> bool:
+    def is_new_move_sequence(self, curr_moves):
         """Check is move sequence is in database.
 
         A move is defined by a list: [card, from_pile, to_pile, rule_str, move_count].
@@ -456,24 +404,21 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         # one move: [card, from_pile, to_pile, move_count]
         moves_str = ",".join([str(e) for _, e in enumerate(curr_moves)])
 
         cur.execute("SELECT * FROM moves WHERE moves_str=? ", (moves_str,))
         move_row = cur.fetchone()
-
-        if move_row == None:
+        if move_row is None:
             is_new = True
             cur.execute("SELECT COUNT(moves_id) FROM moves")
             moves_id = cur.fetchone()[0] + 1
         else:
             is_new = False
             moves_id = move_row[0]
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return is_new, moves_id, moves_str
 
     def is_new_strategy(self, curr_strategy: list[int]) -> bool:
@@ -484,73 +429,77 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         rule_list = ",".join(
             [str(e) for _, e in enumerate(curr_strategy)]
         )  # eg: '1,20,100'
-
         cur.execute("SELECT * FROM strategies WHERE rule_list=? ", (rule_list,))
         strategy_row = cur.fetchone()
-
-        if strategy_row == None:
+        if strategy_row is None:
             is_new = True
             cur.execute("SELECT COUNT(strategy_id) FROM strategies")
             strategy_id = cur.fetchone()[0] + 1
         else:
             is_new = False
             strategy_id = strategy_row[0]
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return is_new, strategy_id, rule_list
 
-    def is_new_solution(self, deck_id: int, moves_id: int) -> bool:
-        """Check if solution is in database. Return is_new, solution_id.
+    def is_new_solution(self, deck_id: int, moves_id: int, strategy_id: int) -> bool:
+        """Check if solution is in database.
 
-        A solution is defined by unique combination of deck and moves.
+        def: A solution is defined by a combination of deck and move sequence.
+        setting: self.SAVE_ALL == True -> save all solutions (default)
+        setting: self.SAVE_ALL == False -> save unique solutions only
+        return: is_new
+        rtype is_new: bool
+        return: solution_id
+        rtype solutions_id: int
         """
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
-        cur.execute(
-            """SELECT * FROM solutions WHERE deck_id=? AND moves_id=?""",
-            [deck_id, moves_id],
-        )
-        solution_row = cur.fetchone()
-
-        if solution_row == None:
+        if self.SAVE_ALL:
+            cur.execute(
+                """SELECT * FROM solutions WHERE deck_id=? AND moves_id=? AND strategy_id=?""",
+                [deck_id, moves_id, strategy_id],
+            )
+            solution_row = cur.fetchone()
+        else:
+            cur.execute(
+                """SELECT * FROM solutions WHERE deck_id=? AND moves_id=?""",
+                [deck_id, moves_id],
+            )
+            solution_row = cur.fetchone()
+        if solution_row is None:
             is_new = True
             cur.execute("""SELECT COUNT(solution_id) FROM solutions""")
             solution_id = cur.fetchone()[0] + 1
         else:
             is_new = False
             solution_id = solution_row[0]
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return is_new, solution_id
 
     def is_new_batch(self, batch_id: int) -> bool:
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         cur.execute("""SELECT * FROM batches WHERE batch_id=?""", (batch_id,))
         batch_row = cur.fetchone()
 
-        if batch_row == None:
+        if batch_row is None:
             is_new = True
             cur.execute("SELECT COUNT(*) FROM solutions")
             batch_id = cur.fetchone()[0] + 1
         else:
             is_new = False
             batch_id = batch_row[0]
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return is_new, batch_id
 
     def is_unique_solution(self, curr_deck: list[cards.Card], curr_moves: list) -> bool:
@@ -564,10 +513,10 @@ class Database:
         else:
             return False
 
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
     #
     #  Update
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
 
     def save_solution(
         self,
@@ -577,7 +526,7 @@ class Database:
         strategy: list[int],
         batch_id: int,
     ) -> None:
-        """Save data for new unique solution to database."""
+        """Save data for new solution to database."""
 
         # Deck
         deck_id = self._update_decks(deck)
@@ -592,26 +541,32 @@ class Database:
         solution_id = self._update_solutions(deck_id, moves_id, strategy_id, batch_id)
 
     def _update_decks(self, curr_deck: list[cards.Card]) -> int:
-        """Add deck if not in database. Return deck_id.
+        """Add deck if not in database or if TRUST_RANDOM == True
 
-        A deck is defined by a unique string of cards.
+        Return deck_id.
         """
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
-        is_new, deck_id, cards = self.is_new_deck(curr_deck)
+        # the faster way, trusting randomness (52!)
+        if self.TRUST_RANDOM:
+            is_new = True
+            curr_cards = ",".join([str(c) for _, c in enumerate(curr_deck)])
+            cur.execute("SELECT COUNT(deck_id) FROM decks")
+            deck_id = cur.fetchone()[0] + 1
+        # deck randomness: the slower but bullet-proof way:
+        else:
+            is_new, deck_id, curr_cards = self.is_new_deck(curr_deck)
 
         if is_new:
             # print(f'Saving new deck. Number of decks in db: {deck_id}')
             cur.execute(
                 """INSERT INTO decks (deck_id, cards) VALUES (?,?)""",
-                (deck_id, cards),
+                (deck_id, curr_cards),
             )
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return deck_id
 
     def _update_moves(self, curr_moves: list, rule_counts: dict) -> int:
@@ -622,9 +577,7 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         is_new, moves_id, moves_str = self.is_new_move_sequence(curr_moves)
-
         # one move: [card, from_pile, to_pile, move_count]
         if is_new:
             # print(f'Saving new move sequence.')
@@ -632,10 +585,9 @@ class Database:
                 """INSERT INTO moves (moves_id, moves_str, rule_counts) VALUES (?,?,?)""",
                 (moves_id, moves_str, rule_counts),
             )
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return moves_id
 
     def _update_strategies(self, curr_strategy: list[int]) -> int:
@@ -646,19 +598,16 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         is_new, strategy_id, rule_list = self.is_new_strategy(curr_strategy)
-
         if is_new:
             # print(f'Saving new strategy. Number of strategies in db: {strategy_id}')
             cur.execute(
                 """INSERT INTO strategies (strategy_id, rule_list) VALUES (?,?)""",
                 (strategy_id, rule_list),
             )
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return strategy_id
 
     def _update_solutions(
@@ -671,19 +620,16 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
-        is_new, solution_id = self.is_new_solution(deck_id, moves_id)
-
+        is_new, solution_id = self.is_new_solution(deck_id, moves_id, strategy_id)
         if is_new:
             # print(f'Saving new solution.')
             cur.execute(
                 """INSERT INTO solutions (solution_id, deck_id, moves_id, strategy_id, batch_id) VALUES (?,?,?,?,?)""",
                 (solution_id, deck_id, moves_id, strategy_id, batch_id),
             )
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return solution_id
 
     def update_batches(
@@ -702,18 +648,15 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         cur.execute("SELECT COUNT(*) FROM batches")
         batch_id = cur.fetchone()[0] + 1
-
         cur.execute(
             """INSERT INTO batches (batch_id, n_decks, rule_list, permute, sub_sets, n_games, runtime) VALUES (?,?,?,?,?,?,?)""",
             (batch_id, n_decks, rule_list, permute, sub_sets, n_games, runtime),
         )
-
         conn.commit()
         cur.close()
-
+        conn.close()
         return batch_id
 
     def update_runtime(self, batch_id: int, runtime: float) -> None:
@@ -728,20 +671,20 @@ class Database:
 
         conn.commit()
         cur.close()
+        conn.close()
 
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
     #
     #  Database
-    # _______________________________________________________________________________________________________
+    # _______________________________________________________
 
     def delete_tables(self, *args) -> None:
         """Delete table in DB."""
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-
         for table_name in args:
             cur.execute(" DROP TABLE ? IF EXISTS ", (table_name,))
-
         conn.commit()
         cur.close()
+        conn.close()

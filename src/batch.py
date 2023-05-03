@@ -16,27 +16,33 @@ from src import game, cards, database, helpers
 # from tqdm import tqdm
 
 
-def run(settings):
+def run(**kwargs):
     # ________________________________________________________________________
     #
     #  Batch settings
     # ________________________________________________________________________
 
-    db_name = settings[0]
-    USE_SUB_SETS = settings[1]
-    PERMUTE = settings[2]
-    STRATEGY_PRINT_OUT = settings[3]
-    GAME_PRINT_OUT = settings[4]
-    # TODO
-    # RECURSIVE       = settings[5]
+    # Strategy generators
+    USE_SUB_SETS = kwargs["USE_SUB_SETS"]
+    PERMUTE = kwargs["PERMUTE"]
+    # Print-outs
+    STRATEGY_PRINT_OUT = kwargs["STRATEGY_PRINT_OUT"]
+    GAME_PRINT_OUT = kwargs["GAME_PRINT_OUT"]
+    # Database
+    db = database.Database(kwargs["DB_NAME"])  # is created if not existing
+    # Definiton of solution
+    db.SAVE_ALL = kwargs["SAVE_ALL"]
+    # Deck randomness
+    if USE_SUB_SETS or PERMUTE:
+        db.TRUST_RANDOM = False
+    else:
+        db.TRUST_RANDOM = kwargs["TRUST_RANDOM"]
 
     # ________________________________________________________________________
     #
     #  Batch variables
     # ________________________________________________________________________
 
-    # Database
-    db = database.Database(db_name)  # is created if not existing
     # Game counter
     game_count = 0
     # Batch flag
@@ -56,18 +62,25 @@ def run(settings):
     # ________________________________________________________________________
 
     # Strategy
-    response = input("Select strategy/rule list: ")
-    if response:
-        rule_list = list(map(int, re.findall(r"[\d]+", response)))
+    response = input("Select strategy/rule list ('q' to exit): ")
+    if not response or response == "q":
+        # sys.exit()
+        return
     else:
-        sys.exit()
+        rule_list = list(map(int, re.findall(r"[\d]+", response)))
 
-    sub_sets = input("Use sub sets (y/n)? ")
+    sub_sets = input("Use sub sets (y/n): ")
     if sub_sets == "y":
         USE_SUB_SETS = True
-    permutation = input("Use permutations (y/n)? ")
+    permutation = input("Use permutations (y/n): ")
     if permutation == "y":
         PERMUTE = True
+    save_all = input("Save all (y/n): ")
+    if save_all == "n":
+        db.SAVE_ALL = False
+    trust_random = input("Trust random (y/n): ")
+    if trust_random == "n":
+        db.TRUST_RANDOM = False
 
     # Decks
     response = input("Use new decks ('return') or decks from DB (input deck_ids):  ")
@@ -94,6 +107,8 @@ def run(settings):
     print(f"Rule list:          {rule_list}")
     print(f"Use sub sets:       {USE_SUB_SETS}")
     print(f"Permute:            {PERMUTE}")
+    print(f"Save all:           {db.SAVE_ALL}")
+    print(f"Trust random:       {db.TRUST_RANDOM}")
     print(f"Number of games:    {n_games}")
     print(
         f"Estimated runtime:  {runtime_str} ({round(runtime_sec)} s / {1000*runtime_sec/n_games:0.2f} ms)"
@@ -140,20 +155,27 @@ def run(settings):
 
             # Batch stats
             # TODO: save score_counts in DB?
-            # TODO: total_rules: use collections.Counter instead
+            # TODO: total_rules: use collections.Counter instead?
             score_counts[curr_game.score] = score_counts.get(curr_game.score, 0) + 1
             total_rules.append(curr_game.rule_counts)
 
-            # Save in DB if is unique solution
-            if curr_game.has_won() and db.is_unique_solution(
-                deck, curr_game.get_moves()
-            ):
+            # Save solution
+            # Alt. 1: save solution for this strategy, deck, and move sequence
+            if db.SAVE_ALL:
+                save_game = curr_game.has_won()
+            # Alt. 2: save a unique solution only
+            else:
+                save_game = curr_game.has_won() and db.is_unique_solution(
+                    deck, curr_game.get_moves()
+                )
+
+            if save_game:
                 solutions_per_deck[deck_nr] = solutions_per_deck.get(deck_nr, 0) + 1
 
                 if not has_saved_new_batch:
                     new_batch_id = db.update_batches(
                         n_decks,
-                        str(sorted(rule_list)),
+                        str(rule_list),
                         PERMUTE,
                         USE_SUB_SETS,
                         n_games,
@@ -231,9 +253,10 @@ def run(settings):
 
     # Settings
     print("\n===========================================================")
-    print(f"Unique solutions:   {n_solutions}")
     print(f"Games:              {game_count}")
     print(f"Decks:              {n_decks}")
+    print(f"Solutions:          {n_solutions}")
+    print(f"Solved decks:       {len(solutions_per_deck)}")
     if has_saved_new_batch:
         print(
             f"Proportion:         {100*n_solutions/n_decks:0.2f} % ({n_solutions/n_decks:0.6f})"
@@ -241,17 +264,17 @@ def run(settings):
         print(f"Odds:               {n_decks/n_solutions:0.1f}")
 
     # Unique solutions
-    if has_saved_new_batch:
-        print("\n===========================================================")
-        print(
-            f"Unique solutions per deck (id) for {len(solutions_per_deck)} of {n_decks} decks."
-        )
-        print("\n")
+    # if has_saved_new_batch:
+    #     print("\n===========================================================")
+    #     print(
+    #         f"Solutions per deck (# in batch) for {len(solutions_per_deck)} of {n_decks} decks."
+    #     )
+    #     print("\n")
 
-    if 25 > n_solutions > 0:
-        pprint.pprint(
-            sorted(solutions_per_deck.items(), key=lambda x: x[1], reverse=True)
-        )
+    # if 25 > n_solutions > 0:
+    #     pprint.pprint(
+    #         sorted(solutions_per_deck.items(), key=lambda x: x[1], reverse=True)
+    #     )
 
     # Scores
     print("\n===========================================================")

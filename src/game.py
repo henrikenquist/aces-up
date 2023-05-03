@@ -9,7 +9,7 @@ class Game:
 
     def __init__(self, deck: list[cards.Card], rule_list: list[int], print_out=False):
         # self.original_shuffled_deck = deck[:]
-        # copy, not reference; NOTE: the same deck is used for all strategies in aces_up main loop
+        # copy, not reference
         self.stack = deck[:]
         self.print_out = print_out
         # self.score = 0
@@ -61,17 +61,15 @@ class Game:
             self._deal()  # and discard
             self._run_strategy()  # and discard until cannot move again
 
-    def move(self, from_pile: int, rule_str: str) -> None:
+    def move(self, from_pile, rule_str) -> None:
         """Move card to first empty pile and then discard all possible cards.
         Used in strategy.py
         """
 
         slots = self._empty_piles()
-
         card_str = from_pile.last_card()
         from_pile_idx = from_pile.index
         to_pile_idx = slots[0]
-
         self.moves.append(
             [
                 from_pile.last_card(),
@@ -85,10 +83,7 @@ class Game:
         if self.print_out:
             print(f"CARD:   {card_str}")
             print(f"RULE:   {rule_str}")
-            # print(f'FROM:   {from_pile_idx+1} ({from_pile_idx})')
-            # print(f'TO:     {to_pile_idx+1} ({to_pile_idx})')
             self.print_current_cards()
-
         self._discard()
 
     def _run_strategy(self) -> None:
