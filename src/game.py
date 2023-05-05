@@ -33,14 +33,13 @@ class Game:
     def current_cards(self) -> list[cards.Card]:
         """Return last card in each pile. Return [] for each empty pile."""
 
-        curr_cards = []
-
-        for curr_pile in self.piles:
-            curr_cards.append(curr_pile.last_card())
-        # for i in range(len(self.piles)):
-        #     curr_cards.append(self.piles[i].last_card())
-
-        return curr_cards
+        return [p.last_card for p in self.piles]
+        # curr_cards = []
+        # for curr_pile in self.piles:
+        #     curr_cards.append(curr_pile.last_card())
+        # # for i in range(len(self.piles)):
+        # #     curr_cards.append(self.piles[i].last_card())
+        # return curr_cards
 
     @property
     def score(self) -> int:
@@ -67,12 +66,12 @@ class Game:
         """
 
         slots = self._empty_piles()
-        card_str = from_pile.last_card()
+        card_str = from_pile.last_card
         from_pile_idx = from_pile.index
         to_pile_idx = slots[0]
         self.moves.append(
             [
-                from_pile.last_card(),
+                from_pile.last_card,
                 from_pile_idx,
                 to_pile_idx,
                 len(self.moves) + 1,
@@ -98,6 +97,9 @@ class Game:
             # test all rules in strategy until one move is made
             for _, move_rule_fcn in enumerate(self.rule_funcs):
                 # if self.print_out: print(move_rule_fcn.__name__)
+
+                # if all(self.min_pile_length()) < 2:
+                #     return  # Break while loop if too small piles
 
                 card_is_moved = move_rule_fcn(
                     self
@@ -227,6 +229,30 @@ class Game:
         else:
             return self.moves
 
+    @property
+    def max_curr_cards(self):
+        return max([c.rank for _, c in enumerate(self.current_cards) if c])
+
+    @property
+    def min_curr_cards(self):
+        return min([c.rank for _, c in enumerate(self.current_cards) if c])
+
+    @property
+    def min_pile_length(self):
+        """Return length and index of smallest pile(s)."""
+
+        min_len = min(p.length() for p in self.piles)
+        idx = [idx for idx, p in enumerate(self.piles) if p.length() == min_len]
+        return min_len, idx
+
+    @property
+    def max_pile_length(self):
+        """Return length and index of largest pile(s)."""
+
+        max_len = max(p.length() for p in self.piles)
+        idx = [idx for idx, p in enumerate(self.piles) if p.length() == max_len]
+        return max_len, idx
+
     # _______________________________________________________________
     #
     #  Validate
@@ -283,7 +309,7 @@ class Game:
         # for i in range(len(self.piles)):
         #     print(self.piles[i].last_card(), end=" ")
         for cur_pile in self.piles:
-            print(cur_pile.last_card(), end=" ")
+            print(cur_pile.last_card, end=" ")
         print("   Pile size:", end=" ")
 
         # for i in range(len(self.piles)):

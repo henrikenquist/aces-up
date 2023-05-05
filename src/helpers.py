@@ -4,7 +4,7 @@ from itertools import permutations
 
 
 def get_batch_estimates(
-    db, number_of_decks: int, rule_list: list[int], PERMUTE: bool, USE_SUB_SETS: bool
+    db, number_of_decks: int, rule_list: list[int], USE_SUB_SETS: bool, PERMUTE: bool
 ) -> tuple[int, float, str]:
     """Calculate number of games and estimated runtime.
     Return n_games, runtime_sec, runtime_str

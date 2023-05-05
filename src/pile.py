@@ -1,3 +1,4 @@
+from xml.sax.handler import property_encoding
 from src import cards
 
 
@@ -59,9 +60,10 @@ class Pile:
         """
         return len(self.cards)
 
+    @property
     def last_card(self) -> cards.Card:
         """Return last card in pile.
-        Return [] is pile is empty.
+        Return [] if pile is empty.
         """
 
         if self.cards:
@@ -101,8 +103,8 @@ class Pile:
         Return False if pile is empty.
         """
 
-        if self.last_card():
-            return self.last_card().rank == cards.Rank(14)
+        if self.last_card:
+            return self.last_card.rank == cards.Rank(14)
         else:
             return False
 
@@ -126,13 +128,23 @@ class Pile:
         else:
             return False
 
+    def below_is_lower(self) -> bool:
+        """Return True if last card has higher card below.
+        Return False if pile has less than two cards.
+        """
+
+        if self.length() > 1:
+            return self.cards[-1].rank > self.cards[-2].rank
+        else:
+            return False
+
     def is_highest_rank(self, current_row: list[cards.Card]) -> bool:
         """Return True if last card in pile is largest in current row.
         Return False if pile is empty.
         """
 
         if self.length() > 1:
-            return self.last_card() >= max(current_row)
+            return self.last_card >= max(current_row)
         else:
             return False
 

@@ -22,8 +22,8 @@ class Database:
 
     def __init__(self, name: str):
         self.name = name
-        self.SAVE_ALL = True
-        self.TRUST_RANDOM = True
+        self.save_all = True
+        self.trust_random = True
         self._repr_cache = None
         self._str_cache = None
 
@@ -181,7 +181,7 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-        avg_runtime = 0.001  # default to 1 ms if empty database
+        avg_runtime = 0.002  # default to 2 ms if empty database
         lin_reg_limit = 10  # minimum n batches to use linear regression
         runtimes = []
         cum_n_decks = []
@@ -199,14 +199,11 @@ class Database:
         elif len(batch_ids) >= lin_reg_limit:
             for batch_id in batch_ids:
                 n_decks, n_games, _, runtime = self.get_batch_info(batch_id)
+                # TODO: could use itertools.accumulate instead
                 running_val += n_decks
                 runtimes.append(runtime / n_games)
-                cum_n_decks.append(
-                    running_val
-                )  # TODO: could use itertools.accumulate instead
-
+                cum_n_decks.append(running_val)
             slope, intercept = np.polyfit(cum_n_decks, runtimes, 1)
-
             avg_runtime = intercept + (running_val + new_decks) * slope
         cur.close()
         conn.close()
@@ -370,8 +367,16 @@ class Database:
     # _______________________________________________________
 
     def is_new_deck(self, curr_deck):
-        """Check if deck is in database. Return is_new, deck_id, cards.
+        """Check if deck is in database. Returns new deck_id and new deck if False
 
+        :param curr_deck: deck to check if is in database
+        :type curr_deck: Deck
+        :return: is_new
+        :rtype is_new: bool
+        :return deck_id
+        :rtype deck_id: int
+        :return cards: cards for deck
+        :rtype cards: str (e.g. '4h,Td,9c,...')
         A deck is defined by a unique string of cards.
         """
 
@@ -450,8 +455,8 @@ class Database:
         """Check if solution is in database.
 
         def: A solution is defined by a combination of deck and move sequence.
-        setting: self.SAVE_ALL == True -> save all solutions (default)
-        setting: self.SAVE_ALL == False -> save unique solutions only
+        setting: self.save_all == True -> save all solutions (default)
+        setting: self.save_all == False -> save unique solutions only
         return: is_new
         rtype is_new: bool
         return: solution_id
@@ -460,7 +465,7 @@ class Database:
 
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
-        if self.SAVE_ALL:
+        if self.save_all:
             cur.execute(
                 """SELECT * FROM solutions WHERE deck_id=? AND moves_id=? AND strategy_id=?""",
                 [deck_id, moves_id, strategy_id],
@@ -549,7 +554,7 @@ class Database:
         conn = sqlite3.connect(self.name)
         cur = conn.cursor()
         # the faster way, trusting randomness (52!)
-        if self.TRUST_RANDOM:
+        if self.trust_random:
             is_new = True
             curr_cards = ",".join([str(c) for _, c in enumerate(curr_deck)])
             cur.execute("SELECT COUNT(deck_id) FROM decks")

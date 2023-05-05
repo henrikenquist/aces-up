@@ -8,6 +8,8 @@ except:
     pass
 from src import cards, database, game, helpers
 
+# See project.py for more examples
+
 # Running these functions:
 #
 # 1. Open terminal and navigate to Aces Up root folder.
@@ -15,9 +17,10 @@ from src import cards, database, game, helpers
 # 3. Import functions, type: from sandbox import *
 # 4. Run (ex.), type: play_game()
 
-DB_NAME = "aces_up_db.sqlite"
-# DB_NAME = 'aces_up_production.sqlite'
-db = database.Database(DB_NAME)
+# DBNAME = "aces_up_db.sqlite"  # WARNING: CS50P sample database, do not edit
+# DBNAME = "aces_up_db_production.sqlite" # WARNING: production batches only
+DBNAME = "aces_up_db_test.sqlite"  # Go ahead, this is the playground!
+db = database.Database(DBNAME)
 
 
 def play_game():
@@ -60,10 +63,16 @@ def db_info():
 
 def solution_rule_counts():
     """Can be used to check if all rules in strategy have been evaluated."""
+
+    # all
     rule_counts = db.get_rule_counts()
-    rule_counts = db.get_rule_counts(batch_id=4)
+
+    # Filters (set your own correct values)
+    #
+    # rule_counts = db.get_rule_counts(batch_id=4)
     # rule_counts = db.get_rule_counts(moves_id=1)
     rule_counts = db.get_rule_counts(strategy_id=1)
+
     print("\n")
     pprint.pprint(rule_counts)
     print("\n")
@@ -118,27 +127,10 @@ def batch_info():
     )
 
 
-def plot_number_games_runtimes():
-    """Number of games and estimated total runtime for batch."""
-    number_of_decks = 10000
-    rule_list = [2, 1, 100, 10, 1000]
-    PERMUTE = False
-    USE_SUB_SETS = False
-    n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(
-        db, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS
-    )
-    print("\n")
-    print(f"Number of games:    {n_games}")
-    print(
-        f"Estimated runtime:  {runtime_str} ({round(runtime_sec)} s / {1000*runtime_sec/n_games:0.2f} ms)"
-    )
-    print("\n")
-    plot_avg_runtimes()
-
-
 def total_strategy_stats():
     """Stats for all strategies"""
 
+    # Filters
     # sort_by = "solutions"
     # sort_by = "decks"
     sort_by = "odds"
@@ -171,21 +163,34 @@ def total_strategy_stats():
     )
 
 
-def single_strategy_stats():
-    """Stats for given strategy"""
-    curr_strategy = [1, 2]
-    n_solutions, n_decks, odds = db.get_strategy_stats(curr_strategy)
-    print("\n")
-    print(
-        f"Strategy {curr_strategy} has {n_solutions} solutions using {n_decks} decks."
+def plot_number_games_runtimes():
+    """Number of games and estimated total runtime for batch.
+
+    Plot and print stored average runtimes.
+    Linear regression line included.
+    Print estimated runtime from given settings.
+    """
+    number_of_decks = 10000
+    rule_list = [2, 1, 100, 10, 1000]  # only the number of rules matter
+    PERMUTE = False  # change to fit your needs
+    USE_SUB_SETS = False  # change to fit your needs
+    n_games, runtime_sec, runtime_str = helpers.get_batch_estimates(
+        db, number_of_decks, rule_list, PERMUTE, USE_SUB_SETS
     )
-    print(f"Odds: {odds:0.1f}")
     print("\n")
+    print(f"Number of games:    {n_games}")
+    print(
+        f"Estimated runtime:  {runtime_str} ({round(runtime_sec)} s / {1000*runtime_sec/n_games:0.2f} ms)"
+    )
+    print("\n")
+    plot_avg_runtimes()
 
 
 def plot_avg_runtimes() -> None:
     """Average runtimes vs cumulative numbers of decks.
-    Linear regression plotted.
+
+    Plot and print stored average runtimes.
+    Linear regression line included.
     """
 
     db_info = db.get_db_info("cum_n_decks", "avg_runtimes")

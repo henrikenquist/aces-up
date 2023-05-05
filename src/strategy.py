@@ -14,16 +14,6 @@ class Strategy:
         self._repr_cache = None
         self._str_cache = None
 
-    # def __repr__(self):
-    #     if not self._repr_cache: # TODO: have to iterate over rule_list to get all rule names
-    #         self._repr_cache = 'Rule({}, {})'.format(Rules.rule_number, Rules.rule_number)
-    #     return self._repr_cache
-
-    # def __str__(self): # TODO: have to iterate over rule_list (rule_number) to get all rule names
-    #     if not self._str_cache:
-    #         self._str_cache = Rules[rule_number] + RULE_NAMES[rule_number]
-    #     return self._str_cache
-
     # _________________________________________________
     #
     # Read
@@ -68,13 +58,17 @@ class Strategy:
             # if rule_func == 5:
             #     rule_funcs.append(self.move_first_ace)
 
+            if rule_func == 800:
+                rule_funcs.append(self.move_from_smallest_has_higher_in_suit_below)
+            if rule_func == 810:
+                rule_funcs.append(self.move_from_smallest_has_lower_in_suit_below)
+            if rule_func == 900:
+                rule_funcs.append(self.move_from_largest_has_higher_in_suit_below)
+            if rule_func == 910:
+                rule_funcs.append(self.move_from_largest_has_lower_in_suit_below)
+
             if rule_func == 1000:
                 rule_funcs.append(self.move_from_random)
-
-            # if rule_func == 10000:
-            #     rule_funcs.append(self.move_from_smallest_has_higher_in_suit_below)
-            # if rule_func == 20000:
-            #     rule_funcs.append(self.move_from_largest_has_higher_in_suit_below)
 
         return rule_funcs
 
@@ -91,9 +85,12 @@ class Strategy:
         from_pile = None
         max_rank = cards.Rank(0)  # JOKER
         for _, pile_iter in enumerate(curr_game.piles):
-            if pile_iter.length() > 1 and pile_iter.last_card().rank > max_rank:
-                max_rank = pile_iter.last_card().rank
+            if (
+                pile_iter.length() > 1
+                and pile_iter.last_card.rank > max_rank
+            ):
                 from_pile = pile_iter
+                max_rank = pile_iter.last_card.rank
 
         if from_pile is None:
             return False
@@ -110,10 +107,10 @@ class Strategy:
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
-                and pile_iter.last_card().rank > max_rank
+                and pile_iter.last_card.rank > max_rank
                 and pile_iter.has_suit_below()
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -133,9 +130,9 @@ class Strategy:
             if (
                 pile_iter.length() > 1
                 and temp_sum == max_rank_sum
-                and pile_iter.last_card().rank > max_rank
+                and pile_iter.last_card.rank > max_rank
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -149,15 +146,15 @@ class Strategy:
         from_pile = None
         min_pile_length = min(p.length() for p in curr_game.piles)
         if min_pile_length < 2:
-            min_pile_length = 2
+            return False
         max_rank = cards.Rank(0)  # JOKER
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == min_pile_length
-                and pile_iter.last_card().rank > max_rank
+                and pile_iter.last_card.rank > max_rank
             ):
                 min_pile_length = pile_iter.length()
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -174,9 +171,9 @@ class Strategy:
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == max_pile_length
-                and pile_iter.last_card().rank > max_rank
+                and pile_iter.last_card.rank > max_rank
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -194,10 +191,10 @@ class Strategy:
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 pile_iter.length() > 1
-                and pile_iter.last_card().rank < max_rank
+                and pile_iter.last_card.rank < max_rank
                 and pile_iter.has_suit_below()
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -217,9 +214,9 @@ class Strategy:
             if (
                 pile_iter.length() > 1
                 and temp_sum == max_rank_sum
-                and pile_iter.last_card().rank < max_rank
+                and pile_iter.last_card.rank < max_rank
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -233,15 +230,15 @@ class Strategy:
         from_pile = None
         min_pile_length = min(p.length() for p in curr_game.piles)
         if min_pile_length < 2:
-            min_pile_length = 2
+            return False
         max_rank = cards.Rank(14)  # ACE
         for _, pile_iter in enumerate(curr_game.piles):
             if (
                 1 < pile_iter.length() == min_pile_length
-                and pile_iter.last_card().rank < max_rank
+                and pile_iter.last_card.rank < max_rank
             ):
                 min_pile_length = pile_iter.length()
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -253,14 +250,14 @@ class Strategy:
         """Move lowest card from the (first) largest pile."""
 
         from_pile = None
-        max_pile_length = max(p.length() for p in curr_game.piles)
+        max_pile_length, _ = curr_game.max_pile_length
         max_rank = cards.Rank(14)  # ACE
         for _, pile_iter in enumerate(curr_game.piles):
             if (
-                1 < pile_iter.length() == max_pile_length
-                and pile_iter.last_card().rank < max_rank
+                pile_iter.length() == max_pile_length
+                and pile_iter.last_card.rank < max_rank
             ):
-                max_rank = pile_iter.last_card().rank
+                max_rank = pile_iter.last_card.rank
                 from_pile = pile_iter
 
         if from_pile is None:
@@ -370,10 +367,10 @@ class Strategy:
         curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
         return True
 
-    ### -------------- NOT IN USE --------------  ###
+    ### -------------- PILE SIZE AND SUIT BELOW --------------  ###
 
     def move_from_smallest_has_higher_in_suit_below(self, curr_game) -> bool:
-        """Move from smallest pile where card has a card of same suit below."""
+        """Move from smallest pile where card has a higher card of same suit below."""
 
         from_pile = None
         min_pile_length = 100
@@ -391,8 +388,27 @@ class Strategy:
         curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
         return True
 
+    def move_from_smallest_has_lower_in_suit_below(self, curr_game) -> bool:
+        """Move from smallest pile where card has a lower card of same suit below."""
+
+        from_pile = None
+        min_pile_length = 100
+        for _, pile_iter in enumerate(curr_game.piles):
+            if (
+                1 < pile_iter.length() < min_pile_length
+                and pile_iter.below_is_lower()
+                and pile_iter.has_suit_below()
+            ):
+                min_pile_length = pile_iter.length()
+                from_pile = pile_iter
+
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
+
     def move_from_largest_has_higher_in_suit_below(self, curr_game) -> bool:
-        """Move from largest pile where card has a card of same suit below."""
+        """Move from largest pile where card has a higher card of same suit below."""
 
         from_pile = None
         max_pile_length = 1
@@ -400,6 +416,25 @@ class Strategy:
             if (
                 pile_iter.length() > max_pile_length
                 and pile_iter.below_is_higher()
+                and pile_iter.has_suit_below()
+            ):
+                max_pile_length = pile_iter.length()
+                from_pile = pile_iter
+
+        if from_pile is None:
+            return False
+        curr_game.move(from_pile, inspect.currentframe().f_code.co_name)
+        return True
+
+    def move_from_largest_has_lower_in_suit_below(self, curr_game) -> bool:
+        """Move from largest pile where card has a lower card of same suit below."""
+
+        from_pile = None
+        max_pile_length = 1
+        for _, pile_iter in enumerate(curr_game.piles):
+            if (
+                pile_iter.length() > max_pile_length
+                and pile_iter.below_is_lower()
                 and pile_iter.has_suit_below()
             ):
                 max_pile_length = pile_iter.length()
