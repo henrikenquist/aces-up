@@ -1,10 +1,29 @@
+# Aces Up Strategies
+
+![The code is as perfect as the logo...](img/aces_up_logo_small.jpg "The code is as perfect as the logo...")
+
+## Aim
+
+To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_.
+
+## Ace Strategist Competition
+
+Enter the competition and become the ultimate *Ace* by beating the odds.
+
+Submit your best strategies and win eternal glory, respect - and this: 🏆
+
+[Enter the competition](https://github.com/henrikenquist/aces-up/wiki/Ace-Strategist-Competition)
+
 # Table of contents
 
-- [Aim](#aim)
+- [Aces Up Strategies](#aces-up-strategies)
+  - [Aim](#aim)
+  - [Ace Strategist Competition](#ace-strategist-competition)
 - [Aces Up - The card game](#aces-up---the-card-game)
 - [Example results](#example-results)
 - [Terminology](#terminology)
 - [Running the software](#running-the-software)
+  - [Online demo](#online-demo)
   - [Game Plan](#game-plan)
   - [Game Center](#game-center)
   - [Single game using code](#single-game-using-code)
@@ -23,17 +42,10 @@
 - [Requirements](#requirements)
 - [Disclaimer](#disclaimer)
 - [Regrets and refactoring](#regrets-and-refactoring)
+  - [Refactoring](#refactoring)
+  - [New features](#new-features)
+  - [GitHub repository](#github-repository)
 - [License](#license)
-
----
-
-# Aim
-
-To explore which strategy (combination and order of move rules) has the best odds of winning the game of _Aces Up_.
-
-![The code is as perfect as the logo...](/img/aces_up_logo_small.jpg "The code is as perfect as the logo...")
-
----
 
 # Aces Up - The card game
 
@@ -65,7 +77,7 @@ Source: https://en.wikipedia.org/wiki/Aces_Up
 
 Already tired of this game? Try some of its [variations](http://www.solitairelaboratory.com/acesup.html)!
 
----
+
 
 # Example results
 
@@ -84,8 +96,6 @@ Decks and moves (and more) for won games are stored in the database. Therefore i
 | 715.3 | 3         | 500 000 | 699       |
 |       |           |         |           |
 
----
-
 # Terminology
 
 | Term     | Definition                                                               |
@@ -100,8 +110,6 @@ Decks and moves (and more) for won games are stored in the database. Therefore i
 | Solution | A combination of deck and winning sequence of moves                      |
 | Strategy | A sequence of rules ordered by priority                                  |
 
----
-
 # Running the software
 
 The most simple form of playing a game consists of one deck and the default strategy (rule 0, highest card).
@@ -109,6 +117,10 @@ The most simple form of playing a game consists of one deck and the default stra
 The most complex form of playing involves many decks, each of which are played using each of the auto-generated strategies, which in turn are based on your custom list of rules.
 
 The latter is the most fun but might challenge both your CPU-fans and your patience (wait for the beep, Windows only).
+
+## Online demo
+
+Test your strategies [online](https://enquist.pythonanywhere.com/). No download needed!
 
 ### Video demo
 
@@ -146,6 +158,8 @@ q - Quit
 
 Select option:
 ```
+
+**WARNING** Before running batches, make sure you have the correct database activated in `project.py`!
 
 ### Using project.py
 
@@ -592,8 +606,6 @@ if __name__ == "__main__":
 
 Note: Print-outs increase runtime. Especially GAME_PRINT_OUT, which also clutters the output for batch runs.
 
----
-
 # Solutions
 
 A game can be won by one or many solutions. You definitely want to store all of those.
@@ -610,7 +622,7 @@ It is possible avoid that behaviour when running a batch (Edit settings (y/n)? y
 
 This could be handy if you want to explore the odds of winning a game of _Aces Up_ **at all** using your strategies. ... but the strategy odds will be messed up.
 
-On the other hand, if you're waving carelessly with the flags you might end up with something like:
+🚩 On the other hand, if you're waving carelessly with the flags you might end up with something like:
 
 ```
 Select option: 3
@@ -624,7 +636,7 @@ Trust random (y/n): n
 
 Firstly, there is no sense in using sub sets or permutations for a single rule.
 
-Secondly, setting the `SAVE_ALL` flag to `FALSE` for a deck you **know** has a solution might give you confusing (but correct) results. Here we have two won games but no solutions (since we redefined the meaning of a "solution" by altering the flag, remember?). Think of the `SAVE_ALL` flag as "ALSO_SAVE_SAME_SOLUTION_BUT_FROM_FROM_NEW_STRATEGIES". How about that as a variable name (Pylint disapproves)?
+Secondly, setting the `SAVE_ALL` flag to `FALSE` for a deck you **know** has a solution might give you confusing (but correct) results. Here we have two won games but no solutions (since we redefined the meaning of a "solution" by altering the flag, remember?). Think of the `SAVE_ALL` flag as "ALSO_SAVE_SAME_SOLUTION_BUT_FROM_NEW_STRATEGIES". How about that as a variable name (Pylint disapproves)?
 
 ```
 ===========================================================
@@ -642,8 +654,6 @@ Score distribution for 3 games:
 
 {31: 1, 48: 2}
 ```
-
----
 
 # Strategies
 
@@ -704,20 +714,26 @@ Moves are only made from piles larger than one card.
 ### A friendly conversation
 
 A player might say:
-> "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use those?"
+
+    "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use those?"
 
 I reply:
-> "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
+
+    "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
 
 The player is not convinced:
-> "Why would you want to do that? Isn't that stupid? Don't you want to win the game?"
+
+    "Why would you want to do that? Isn't that stupid? Don't you want to win the game?"
 
 I explain:
-> "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
-> 
-> Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
->
-> By the way, only allowing for ace moves is a [known variation](https://en.wikipedia.org/wiki/Aces_Up#Variations) which make it harder to win (odds: 270). Don't you like a challenge?
+
+    "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
+
+    Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
+
+    By the way, only allowing for ace moves is a known variation which is harder to win. Don't you like a challenge?
+
+[Aces Up variations](https://en.wikipedia.org/wiki/Aces_Up#Variations)
 
 ### Missing rules
 
@@ -761,8 +777,6 @@ Generally:
 - Best form? Well, that is what it's all about. You tell me!
 
 \* Well, it is meaningful when using `USE_SUB_SETS` and/or `PERMUTE` in batches, e.g. if you want to run a really big batch (see *Number of games* below).
-
----
 
 # Batches
 
@@ -838,11 +852,9 @@ Easier and better, right? But what if you want to test new strategies on the sam
 
 - Use a separate database for each approach! They don't play nice.
 
-- Make sure each strategy has played the same number of games, e.g. by always using the same number of decks for each batch  (see `batches` table or sample code in `sandbox.py`). Otherwise the odds can't be reliably compared across strategies.
+- Make sure each strategy has played the same number of games, e.g. by always using the same number of decks for each batch  (see game option 4, the `batches` table, or sample code in `sandbox.py`). Otherwise the odds can't be reliably compared across strategies.
 
 - Use the same value of the flags `SAVE_ALL` and `TRUST_RANDOM` for a specific database.
-
----
 
 # Automate strategy generation
 
@@ -882,8 +894,6 @@ Example:
 - 18 rules (i.e. all implemented rules)
 - -> ~6.78<sup>15</sup> [games for each deck](https://www.symbolab.com/solver/induction-calculator/solve%20for%20%5Csum_%7Bn%3D1%7D%5E%7B18%7D%20%5Cleft(n%5Cright)!?or=input).
 
----
-
 # Database
 
 You can use [DB Browser](https://sqlitebrowser.org/) or similar to inspect and manipulate databases (fix things that went haywire).
@@ -919,8 +929,6 @@ Yes, `rule_list` is duplicated in the `batches` table instead of using the obvio
 
 ...and how do you think I felt when I realized there is an `AUTO_INCREMENT` in sqlite? Happy of course, since then I get to refactor more - later. Yeay!
 
----
-
 # Requirements
 
 This software is written in [Python](https://www.python.org/downloads/). You need to install that to be able to play _Aces Up_.
@@ -945,8 +953,6 @@ Windows users will hear a beep when a batch run is finished (using the `winsound
 
 When using batches (running and extracting statistics), an sqlite database is required. It is created when running the first batch and updated for consecutive batch runs. The name of the database is set in `project.py` and `sandbox.py` respectively (depending on the way you choose to run the software).
 
----
-
 # Disclaimer
 
 This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, sqlite, git, pip, virtual environments, VSCode, extensions, and so forth - quite a mouthful. In order to not overextend myself, I let an AI create the logo.
@@ -967,21 +973,19 @@ If you're not happy with my thing, there are other Aces Up solvers out there:
 
 A recursive(?) [OO-styled implementation](https://github.com/magnusbakken/aces-up) 
 
----
-
 # Regrets and refactoring
 
 Would I design the software the same way again? No, certainly not. Game logic is convoluted, code is overly complicated, and the software design follows the infamous *"...but it works"* ™ pattern. Also, I have learned things along the way, things which would have been helpful at the beginning of the project but were more akin to magic at the time. 
 
 Any regrets? No, nothing that can't be fixed by refactoring!
 
-If I would do this again, I would aim for a recursive algorithm and run sessions of batches. I know enough now to do that, but since I started this project before I knew anyting it became the unwieldly beast it is.
+If I would do this again, I might aim for a recursive algorithm and run sessions of batches. I know enough now to do that, but since I started this project before I knew anyting it became the unwieldly beast it is.
 
 Lessons learned? First of all, I would **plan** things before starting to type. Think, then do!
 
 So, what about the future?  
 
-Refactoring
+## Refactoring
 
 - optimize the code; running large batches on an old laptop takes time, and energy is at a premium in this day and age
 - use a more object-oriented approach, which is obvious in hindsight
@@ -992,7 +996,7 @@ Refactoring
 - (use a database framework such as SQLAlchemy)
 - ... and the list goes on
 
-New features
+## New features
 
 - web based user interface
 - support for more visual, interactive, and user friendly statistics output
@@ -1006,14 +1010,18 @@ Actually let the user play the game manually? I guess some of you just wanted th
 There are **so** many implementations out on the interweb that I can't be bothered making yet another one.
 
 I made something else instead. It was fun!
-  
----
+
+## GitHub repository
+
+Download, contribute, and join the community.
+
+*Aces Up Strategies* [repository on GitHub](https://github.com/henrikenquist/aces-up)
 
 # License
 
 [MIT License](https://mit-license.org/)
 
-Copyright (c) 2023 Henrik Enquist (GitHub: henrikenquist)
+Copyright (c) 2023 Henrik Enquist (GitHub: [henrikenquist](https://github.com/henrikenquist))
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
