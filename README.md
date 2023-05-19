@@ -10,7 +10,7 @@ To explore which strategy (combination and order of move rules) has the best odd
 
 Enter the competition and become the ultimate *Ace* by beating the odds.
 
-Submit your best strategies and win eternal glory, respect - and this: 🏆
+Submit your best strategies and win eternal glory, respect,...and this: 🏆
 
 [Enter the competition](https://github.com/henrikenquist/aces-up/wiki/Ace-Strategist-Competition)
 
@@ -23,7 +23,9 @@ Submit your best strategies and win eternal glory, respect - and this: 🏆
 - [Example results](#example-results)
 - [Terminology](#terminology)
 - [Running the software](#running-the-software)
-  - [Online demo](#online-demo)
+  - [Play online](#play-online)
+  - [Video demo](#video-demo)
+  - [Explore the unknown and reach out](#explore-the-unknown-and-reach-out)
   - [Game Plan](#game-plan)
   - [Game Center](#game-center)
   - [Single game using code](#single-game-using-code)
@@ -118,15 +120,17 @@ The most complex form of playing involves many decks, each of which are played u
 
 The latter is the most fun but might challenge both your CPU-fans and your patience (wait for the beep, Windows only).
 
-## Online demo
+## Play online
 
 Test your strategies [online](https://enquist.pythonanywhere.com/). No download needed!
 
-### Video demo
+## Video demo
 
-You can [watch a demo](YouTube url goes here) on how to run the software.
+You can watch a shortish [demo](https://youtu.be/g9ONYG44vq8) on how to run the software.
 
-### Explore the unknown and reach out
+A bit more [interactive version](https://scratch.mit.edu/projects/852046666/) on Scratch.
+
+## Explore the unknown and reach out
 
 If that isn't enough for you, please go ahead and adapt the code to meet your needs and expand the functionality however you like (see `sandbox.py` for sample code and license below).
 
@@ -715,23 +719,23 @@ Moves are only made from piles larger than one card.
 
 A player might say:
 
-    "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use those?"
+> "Hey dude, the _Ace_ rule moves are covered by the _Highest card_ rules so why not only use those?"
 
 I reply:
 
-    "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
+> "That is correct, my friend. But! What if you want to test a strategy where you only want to move the aces, but not the highest card (if not an ace)?"
 
 The player is not convinced:
 
-    "Why would you want to do that? Isn't that stupid? Don't you want to win the game?"
+> "Why would you want to do that? Isn't that stupid? Don't you want to win the game?"
 
 I explain:
 
-    "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
-
-    Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
-
-    By the way, only allowing for ace moves is a known variation which is harder to win. Don't you like a challenge?
+> "Well remember, the aim of this software is to test different strategies, so this is a feature - not a bug.
+>
+> Run game option 2, first with rule 3 and then with rule 30. You will see that you (sometimes) get different scores!
+>
+> By the way, only allowing for ace moves is a known variation which is harder to win. Don't you like a challenge?
 
 [Aces Up variations](https://en.wikipedia.org/wiki/Aces_Up#Variations)
 
@@ -790,7 +794,7 @@ There are two approaches towards randomness when testing various strategies with
 
 ## Systematic approach
 
-This approach considers the fact that if one strategy has won a game, another (similar) strategy will have a higher chance of winning that particular game - especially if the rule list is well-designed. In that sense, there is less randomness involved. Since all strategies use the same decks in a batch, the resulting odds are misleading if the number of decks is low.
+This approach considers the fact that if one strategy has won a game, another (similar) strategy will have a higher chance of winning that particular game - especially if the rule list is well-designed. In that sense, there is less randomness involved. Since all strategies (created by `USE_SUB_SETS` and/or `PERMUTE`) use the same decks in a batch, the resulting odds are misleading if the number of decks is low.
 
 This approach is suitable when comparing strategies for a given set of decks, or for *mega-batches* ™. 
 
@@ -827,7 +831,7 @@ It should be straightforward to do and be based on joining the table `solutions`
 
 ## Stochastic approach
 
-This approach is more happy-go-lucky and relies on the `shuffle` function in Python to deliver randomness correctly. If it does, it is unlikely that two games are played using the same deck (one in ~8x10<sup>67</sup>). Comparing the odds of different strategies then relies on statistics and for that you need equally **many** games for each strategy.
+This approach is more happy-go-lucky and relies on the `shuffle` function in Python to deliver randomness correctly. If it does, it is unlikely that two games are played using the same deck (one in ~8x10<sup>67</sup>). Comparing the odds of different strategies then relies on statistics and for that you need **equally** many games for each strategy.
 
 One advantage with this approach is that you can speed things up a little (only decks for won games are checked) by trusting the decks are "always" unique. Per default, the flag `TRUST_RANDOM` is set to `True` (i.e. don't check if deck is already in database). It is possible avoid that behaviour when running a batch (Edit settings (y/n)? y -> Trust random (y/n)? n)
 
@@ -937,7 +941,7 @@ This software is written in [Python](https://www.python.org/downloads/). You nee
 
 Imported modules are listed in `requirements.txt`.
 
-- Running _Aces Up_ via `project.py` requires **no** installation of additional modules.
+- Running _Aces Up Strategies_ via `project.py` requires **no** installation of additional modules.
 
 - Running `test_project.py` requires `pytest` and dependencies.
   
@@ -947,15 +951,18 @@ So, why the long requirement list?
   
 - I also installed `matplotlib` and `numpy` for plotting runtimes in `sandbox.py` (I like pretty pictures). These modules, and their dependencies, are not used by `project.py`.
 
-Windows users will hear a beep when a batch run is finished (using the `winsound` module). Users on other platforms will have to stare at the screen for hours on end to know when their *mega-batches* ™ are done. If you experience a `ModuleNotFoundError`, this might be why (although I wrapped the thing in try-except-blocks).
+Windows users will hear a beep when a batch run is finished (using the `winsound` module). Users on other platforms will have to stare at the screen for hours on end to know when their *mega-batches* ™ are done. If you experience a `ModuleNotFoundError`, this might be why (although I wrapped the bloody thing in try-except blocks).
 
 ### Write permission
 
 When using batches (running and extracting statistics), an sqlite database is required. It is created when running the first batch and updated for consecutive batch runs. The name of the database is set in `project.py` and `sandbox.py` respectively (depending on the way you choose to run the software).
 
+
+Please take care to "activate" the correct db before running the program. You will thank yourself later...
+
 # Disclaimer
 
-This is my first Python project ever and I've been using _Aces-Up_ as a way to learn the Python language itself, various related conventions and styles, OO-programming, Markdown, sqlite, git, pip, virtual environments, VSCode, extensions, and so forth - quite a mouthful. In order to not overextend myself, I let an AI create the logo.
+This is my first Python project ever and I've been using _Aces Up Strategies_ as a way to learn the Python language itself, various related conventions and styles, Markdown, sqlite, git, pip, virtual environments, VSCode, extensions, deployment on pythonanywhere, and so forth - quite a mouthful. In order to not overextend myself, I let an AI create the logo.
 
 Therefore, it is by no means the most elegant, efficient and "pythonic" code out there. Rather, it's a playground and hopefully an incrementally less messy learning experiment (which might be reflected in the code evolution as seen in the commits). One upside is that there is plenty of room for improvement!
 

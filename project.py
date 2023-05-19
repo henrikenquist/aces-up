@@ -8,7 +8,7 @@ DBNAME = "aces_up_db.sqlite"  # WARNING: CS50P sample database, do not edit
 db = database.Database(DBNAME)
 RULES = [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400, 800, 810, 900, 910, 1000]
 DEFAULT_STRATEGY = [0]
-EXIT_CODES = ["c", "e", "n", "q", "cancel", "exit", "no", "quit"]
+EXIT_CODES = ["c", "e", "q", "cancel", "exit", "quit"]
 
 
 def main():

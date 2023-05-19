@@ -11,7 +11,8 @@ try:
 except ModuleNotFoundError:
     pass
 from datetime import timedelta
-from src import game, cards, database, helpers
+
+from src import cards, database, game, helpers
 
 RULES = [0, 1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300, 400, 800, 810, 900, 910, 1000]
 EXIT_CODES = ["c", "e", "q", "cancel", "exit", "quit"]
@@ -248,7 +249,7 @@ def run(**settings):
             print(f"Odds:               {n_decks/n_solutions:0.1f}")
 
         # Solutions per deck
-        if has_saved_new_batch:
+        if has_saved_new_batch and (settings["USE_SUB_SETS"] or settings["PERMUTE"]):
             print("\n===========================================================")
             print(
                 f"Solutions per deck (# in batch) for {len(solutions_per_deck)} of {n_decks} decks."
